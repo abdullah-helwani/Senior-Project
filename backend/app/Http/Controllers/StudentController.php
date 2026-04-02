@@ -12,3 +12,4 @@ class StudentController extends Controller
         return response()->json(DB::table('student')->get());
     }
 }
+
