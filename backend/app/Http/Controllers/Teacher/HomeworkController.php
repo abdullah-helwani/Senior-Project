@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Models\Enrollment;
 use App\Models\Homework;
+use App\Models\HomeworkSubmission;
 use App\Models\Teacher;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
@@ -113,5 +115,73 @@ class HomeworkController extends Controller
         Homework::where('teacher_id', $teacherId)->findOrFail($homeworkId)->delete();
 
         return response()->json(['message' => 'Homework deleted successfully.']);
+    }
+
+    /**
+     * GET /teacher/{teacherId}/homework/{homeworkId}/submissions
+     *
+     * View all submissions for a homework assignment with summary stats.
+     * Filters: status (submitted|graded)
+     */
+    public function submissions(int $teacherId, int $homeworkId, Request $request)
+    {
+        $homework = Homework::where('teacher_id', $teacherId)->findOrFail($homeworkId);
+
+        $query = HomeworkSubmission::where('homework_id', $homeworkId)
+            ->with('student');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $submissions = $query->orderByDesc('submittedat')->get();
+
+        // Count enrolled students to calculate submission rate
+        $enrolledCount = Enrollment::where('section_id', $homework->section_id)
+            ->where('status', 'active')
+            ->count();
+
+        $gradedSubmissions = $submissions->where('status', 'graded');
+
+        $summary = [
+            'total_enrolled'  => $enrolledCount,
+            'total_submitted' => $submissions->count(),
+            'total_graded'    => $gradedSubmissions->count(),
+            'not_submitted'   => $enrolledCount - $submissions->count(),
+            'average_score'   => $gradedSubmissions->isNotEmpty()
+                ? round($gradedSubmissions->avg('score'), 2)
+                : null,
+        ];
+
+        return response()->json([
+            'homework'    => $homework->load('subject'),
+            'summary'     => $summary,
+            'submissions' => $submissions,
+        ]);
+    }
+
+    /**
+     * PUT /teacher/{teacherId}/homework/{homeworkId}/submissions/{submissionId}/grade
+     *
+     * Grade a student's submission.
+     */
+    public function grade(int $teacherId, int $homeworkId, int $submissionId, Request $request)
+    {
+        Homework::where('teacher_id', $teacherId)->findOrFail($homeworkId);
+
+        $submission = HomeworkSubmission::where('submission_id', $submissionId)
+            ->where('homework_id', $homeworkId)
+            ->firstOrFail();
+
+        $request->validate([
+            'score' => 'required|numeric|min:0',
+        ]);
+
+        $submission->update([
+            'score'  => $request->score,
+            'status' => 'graded',
+        ]);
+
+        return response()->json($submission->load('student'));
     }
 }

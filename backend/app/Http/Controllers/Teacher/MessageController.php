@@ -77,15 +77,59 @@ class MessageController extends Controller
     }
 
     /**
-     * Show a single sent message.
+     * List messages received by this teacher (inbox).
+     *
+     * Query params:
+     *   sender_id  - filter by specific parent
+     *   student_id - filter by student the message is about
+     *   unread     - "true" to show only unread messages
+     */
+    public function inbox(int $teacherId, Request $request)
+    {
+        $teacher = Teacher::with('user')->findOrFail($teacherId);
+
+        $query = Message::with(['sender', 'student.user'])
+            ->where('receiver_id', $teacher->user_id);
+
+        if ($request->filled('sender_id')) {
+            $query->where('sender_id', $request->sender_id);
+        }
+
+        if ($request->filled('student_id')) {
+            $query->where('student_id', $request->student_id);
+        }
+
+        if ($request->input('unread') === 'true') {
+            $query->whereNull('read_at');
+        }
+
+        $unreadCount = Message::where('receiver_id', $teacher->user_id)
+            ->whereNull('read_at')
+            ->count();
+
+        $messages = $query->latest()->paginate($request->input('per_page', 15));
+
+        return response()->json([
+            'unread_count' => $unreadCount,
+            'messages'     => $messages,
+        ]);
+    }
+
+    /**
+     * Show a single message (sent or received).
+     * Auto-marks as read if the teacher is the receiver.
      */
     public function show(int $teacherId, int $messageId)
     {
-        $teacher = Teacher::findOrFail($teacherId);
+        $teacher = Teacher::with('user')->findOrFail($teacherId);
 
-        $message = Message::with(['receiver', 'student.user'])
-            ->where('sender_id', $teacher->user_id)
+        $message = Message::with(['sender', 'receiver', 'student.user'])
+            ->where(fn ($q) => $q->where('sender_id', $teacher->user_id)->orWhere('receiver_id', $teacher->user_id))
             ->findOrFail($messageId);
+
+        if ($message->receiver_id === $teacher->user_id && ! $message->read_at) {
+            $message->update(['read_at' => now()]);
+        }
 
         return response()->json($message);
     }

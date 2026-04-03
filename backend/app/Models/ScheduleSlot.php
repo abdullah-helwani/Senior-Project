@@ -8,6 +8,7 @@ class ScheduleSlot extends Model
 {
     protected $table = 'scheduleslot';
     protected $primaryKey = 'slot_id';
+    public $timestamps = false;
 
     // Note: your table has no end_time column
     protected $fillable = [

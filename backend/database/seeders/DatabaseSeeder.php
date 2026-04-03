@@ -214,25 +214,37 @@ class DatabaseSeeder extends Seeder
         // ─────────────────────────────────────────────
         // 9. HOMEWORK
         // ─────────────────────────────────────────────
-        DB::table('homework')->insert([
-            [
-                'subject_id' => $mathId, 'teacher_id' => $teacherId, 'section_id' => $sectionId,
-                'title' => 'Algebra Practice Set', 'description' => 'Complete exercises 1-20 from chapter 5',
-                'due_date' => Carbon::now()->addDays(3)->toDateString(),
-                'created_at' => $now, 'updated_at' => $now,
-            ],
-            [
-                'subject_id' => $scienceId, 'teacher_id' => $teacherId, 'section_id' => $sectionId,
-                'title' => 'Lab Report: Photosynthesis', 'description' => 'Write up the photosynthesis experiment results',
-                'due_date' => Carbon::now()->addDays(7)->toDateString(),
-                'created_at' => $now, 'updated_at' => $now,
-            ],
-            [
-                'subject_id' => $englishId, 'teacher_id' => $teacher2Id, 'section_id' => $sectionId,
-                'title' => 'Essay: My Favorite Book', 'description' => 'Write a 500-word essay about your favorite book',
-                'due_date' => Carbon::now()->subDays(2)->toDateString(),
-                'created_at' => $now, 'updated_at' => $now,
-            ],
+        $hw1Id = DB::table('homework')->insertGetId([
+            'subject_id' => $mathId, 'teacher_id' => $teacherId, 'section_id' => $sectionId,
+            'title' => 'Algebra Practice Set', 'description' => 'Complete exercises 1-20 from chapter 5',
+            'due_date' => Carbon::now()->addDays(3)->toDateString(),
+            'created_at' => $now, 'updated_at' => $now,
+        ]);
+
+        $hw2Id = DB::table('homework')->insertGetId([
+            'subject_id' => $scienceId, 'teacher_id' => $teacherId, 'section_id' => $sectionId,
+            'title' => 'Lab Report: Photosynthesis', 'description' => 'Write up the photosynthesis experiment results',
+            'due_date' => Carbon::now()->addDays(7)->toDateString(),
+            'created_at' => $now, 'updated_at' => $now,
+        ]);
+
+        $hw3Id = DB::table('homework')->insertGetId([
+            'subject_id' => $englishId, 'teacher_id' => $teacher2Id, 'section_id' => $sectionId,
+            'title' => 'Essay: My Favorite Book', 'description' => 'Write a 500-word essay about your favorite book',
+            'due_date' => Carbon::now()->subDays(2)->toDateString(),
+            'created_at' => $now, 'updated_at' => $now,
+        ]);
+
+        // ─────────────────────────────────────────────
+        // 9b. HOMEWORK SUBMISSIONS
+        // ─────────────────────────────────────────────
+        DB::table('homeworksubmission')->insert([
+            // Ali submitted the essay (overdue) — graded
+            ['homework_id' => $hw3Id, 'student_id' => $student1Id, 'submittedat' => Carbon::now()->subDay(), 'score' => 85, 'status' => 'graded'],
+            // Fatima submitted the essay — graded
+            ['homework_id' => $hw3Id, 'student_id' => $student2Id, 'submittedat' => Carbon::now()->subDays(3), 'score' => 92, 'status' => 'graded'],
+            // Ali submitted algebra — pending grading
+            ['homework_id' => $hw1Id, 'student_id' => $student1Id, 'submittedat' => $now, 'score' => null, 'status' => 'submitted'],
         ]);
 
         // ─────────────────────────────────────────────

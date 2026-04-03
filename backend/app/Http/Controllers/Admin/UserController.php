@@ -77,4 +77,25 @@ class UserController extends Controller
 
         return response()->json($user, 201);
     }
+
+    /**
+     * PUT /admin/users/{id}/reset-password
+     *
+     * Admin resets a user's password.
+     */
+    public function resetPassword(int $id, Request $request)
+    {
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'new_password' => ['required', Password::min(8)],
+        ]);
+
+        $user->update(['password' => Hash::make($request->new_password)]);
+
+        // Revoke all tokens so the user has to login with the new password
+        $user->tokens()->delete();
+
+        return response()->json(['message' => 'Password reset successfully. User has been logged out of all sessions.']);
+    }
 }

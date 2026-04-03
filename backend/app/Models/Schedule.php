@@ -8,6 +8,7 @@ class Schedule extends Model
 {
     protected $table = 'schedule';
     protected $primaryKey = 'schedule_id';
+    public $timestamps = false;
 
     protected $fillable = ['section_id', 'termname'];
 

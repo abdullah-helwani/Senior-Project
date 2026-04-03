@@ -13,25 +13,37 @@ use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\EnrollmentController;
 use App\Http\Controllers\Admin\ParentController as AdminParentController;
 use App\Http\Controllers\Admin\ComplaintController as AdminComplaintController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\TeacherAssignmentController;
+use App\Http\Controllers\Admin\ScheduleController as AdminScheduleController;
+use App\Http\Controllers\Admin\AttendanceController as AdminAttendanceController;
+use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
+use App\Http\Controllers\Admin\BehaviorLogController as AdminBehaviorLogController;
 use App\Http\Controllers\Teacher\ScheduleController;
 use App\Http\Controllers\Teacher\HomeworkController;
 use App\Http\Controllers\Teacher\MessageController;
 use App\Http\Controllers\Teacher\AttendanceController as TeacherAttendanceController;
 use App\Http\Controllers\Teacher\PerformanceReportController;
 use App\Http\Controllers\Teacher\BehaviorLogController;
+use App\Http\Controllers\Teacher\ProfileController as TeacherProfileController;
 use App\Http\Controllers\Student\HomeworkController as StudentHomeworkController;
 use App\Http\Controllers\Student\NotificationController as StudentNotificationController;
 use App\Http\Controllers\Student\MarksController as StudentMarksController;
 use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 use App\Http\Controllers\Student\AttendanceController as StudentAttendanceController;
 use App\Http\Controllers\Student\WarningController as StudentWarningController;
+use App\Http\Controllers\Student\ProfileController as StudentProfileController;
+use App\Http\Controllers\Student\SubmissionController as StudentSubmissionController;
 use App\Http\Controllers\ParentControllers\ChildMarksController;
 use App\Http\Controllers\ParentControllers\ChildAttendanceController;
 use App\Http\Controllers\ParentControllers\BehaviorController;
 use App\Http\Controllers\ParentControllers\SchoolNoteController;
 use App\Http\Controllers\ParentControllers\MessageController as ParentMessageController;
 use App\Http\Controllers\ParentControllers\ComplaintController;
+use App\Http\Controllers\ParentControllers\ChildrenController;
+use App\Http\Controllers\ParentControllers\ProfileController as ParentProfileController;
+use App\Http\Controllers\ParentControllers\ChildHomeworkController;
+use App\Http\Controllers\ParentControllers\ChildScheduleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,6 +60,8 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', [AuthController::class, 'me']);
+    Route::put('/change-password', [AuthController::class, 'changePassword']);
 
     /*
     |--------------------------------------------------------------------------
@@ -56,8 +70,12 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::middleware('role:admin')->prefix('admin')->group(function () {
 
+        // Dashboard
+        Route::get('/dashboard', [DashboardController::class, 'index']);
+
         // Create any user account (student / teacher / parent / admin)
         Route::post('/users', [UserController::class, 'store']);
+        Route::put('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
 
         // Students — CRUD + search + filter
         Route::get('/students',         [StudentController::class, 'index']);
@@ -94,6 +112,24 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/assessments/{id}/results',      [AssessmentController::class, 'storeResults']);
         Route::get('/assessments/{id}/results',       [AssessmentController::class, 'results']);
 
+        // Attendance — record, view, manage sessions
+        Route::get('/attendance',                                       [AdminAttendanceController::class, 'index']);
+        Route::post('/attendance',                                      [AdminAttendanceController::class, 'store']);
+        Route::get('/attendance/student/{studentId}',                   [AdminAttendanceController::class, 'studentSummary']);
+        Route::get('/attendance/{sessionId}',                           [AdminAttendanceController::class, 'show']);
+        Route::put('/attendance/{sessionId}/records/{attendanceId}',    [AdminAttendanceController::class, 'updateRecord']);
+        Route::delete('/attendance/{sessionId}',                        [AdminAttendanceController::class, 'destroy']);
+
+        // Schedules — CRUD + slot management
+        Route::get('/schedules',                          [AdminScheduleController::class, 'index']);
+        Route::post('/schedules',                         [AdminScheduleController::class, 'store']);
+        Route::get('/schedules/{id}',                     [AdminScheduleController::class, 'show']);
+        Route::put('/schedules/{id}',                     [AdminScheduleController::class, 'update']);
+        Route::delete('/schedules/{id}',                  [AdminScheduleController::class, 'destroy']);
+        Route::post('/schedules/{id}/slots',              [AdminScheduleController::class, 'addSlot']);
+        Route::put('/schedules/{id}/slots/{slotId}',      [AdminScheduleController::class, 'updateSlot']);
+        Route::delete('/schedules/{id}/slots/{slotId}',   [AdminScheduleController::class, 'removeSlot']);
+
         // Teacher Assignments — assign teachers to sections/subjects
         Route::get('/teacher-assignments',         [TeacherAssignmentController::class, 'index']);
         Route::post('/teacher-assignments',        [TeacherAssignmentController::class, 'store']);
@@ -110,6 +146,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/parents/{id}/children',               [AdminParentController::class, 'addChild']);
         Route::delete('/parents/{id}/children/{studentId}', [AdminParentController::class, 'removeChild']);
 
+        // Behavior Logs — view all across teachers
+        Route::get('/behavior-logs',      [AdminBehaviorLogController::class, 'index']);
+        Route::get('/behavior-logs/{id}', [AdminBehaviorLogController::class, 'show']);
+        Route::delete('/behavior-logs/{id}', [AdminBehaviorLogController::class, 'destroy']);
+
+        // Notifications — broadcast + manage
+        Route::get('/notifications',      [AdminNotificationController::class, 'index']);
+        Route::post('/notifications',     [AdminNotificationController::class, 'store']);
+        Route::get('/notifications/{id}', [AdminNotificationController::class, 'show']);
+        Route::delete('/notifications/{id}', [AdminNotificationController::class, 'destroy']);
+
         // Complaints — view, review, reply
         Route::get('/complaints',         [AdminComplaintController::class, 'index']);
         Route::get('/complaints/{id}',    [AdminComplaintController::class, 'show']);
@@ -123,6 +170,9 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::middleware('role:teacher')->prefix('teacher')->group(function () {
 
+        // Profile
+        Route::get('/{teacherId}/profile', [TeacherProfileController::class, 'show']);
+
         // Weekly schedule
         Route::get('/{teacherId}/schedule', [ScheduleController::class, 'index']);
 
@@ -132,11 +182,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{teacherId}/homework/{id}',    [HomeworkController::class, 'show']);
         Route::put('/{teacherId}/homework/{id}',    [HomeworkController::class, 'update']);
         Route::delete('/{teacherId}/homework/{id}', [HomeworkController::class, 'destroy']);
+        Route::get('/{teacherId}/homework/{id}/submissions',                        [HomeworkController::class, 'submissions']);
+        Route::put('/{teacherId}/homework/{id}/submissions/{submissionId}/grade',   [HomeworkController::class, 'grade']);
 
-        // Messages to parents
-        Route::get('/{teacherId}/messages',      [MessageController::class, 'sent']);
-        Route::post('/{teacherId}/messages',     [MessageController::class, 'send']);
-        Route::get('/{teacherId}/messages/{id}', [MessageController::class, 'show']);
+        // Messages to/from parents
+        Route::get('/{teacherId}/messages',       [MessageController::class, 'sent']);
+        Route::get('/{teacherId}/messages/inbox', [MessageController::class, 'inbox']);
+        Route::post('/{teacherId}/messages',      [MessageController::class, 'send']);
+        Route::get('/{teacherId}/messages/{id}',  [MessageController::class, 'show']);
 
         // Attendance — record + view per section
         Route::post('/{teacherId}/attendance',   [TeacherAttendanceController::class, 'store']);
@@ -158,9 +211,17 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::middleware('role:student')->prefix('student')->group(function () {
 
+        // Profile
+        Route::get('/{studentId}/profile', [StudentProfileController::class, 'show']);
+
         // Homework — view assigned homework
         Route::get('/{studentId}/homework',      [StudentHomeworkController::class, 'index']);
         Route::get('/{studentId}/homework/{id}', [StudentHomeworkController::class, 'show']);
+
+        // Homework submissions
+        Route::get('/{studentId}/submissions',      [StudentSubmissionController::class, 'index']);
+        Route::post('/{studentId}/submissions',     [StudentSubmissionController::class, 'store']);
+        Route::get('/{studentId}/submissions/{id}', [StudentSubmissionController::class, 'show']);
 
         // Marks / Grades
         Route::get('/{studentId}/marks',         [StudentMarksController::class, 'index']);
@@ -188,9 +249,21 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::middleware('role:parent')->prefix('parent')->group(function () {
 
+        // Profile
+        Route::get('/{parentId}/profile', [ParentProfileController::class, 'show']);
+
+        // Children list
+        Route::get('/{parentId}/children', [ChildrenController::class, 'index']);
+
         // Child's marks
         Route::get('/{parentId}/children/{studentId}/marks',         [ChildMarksController::class, 'index']);
         Route::get('/{parentId}/children/{studentId}/marks/summary', [ChildMarksController::class, 'summary']);
+
+        // Child's homework
+        Route::get('/{parentId}/children/{studentId}/homework', [ChildHomeworkController::class, 'index']);
+
+        // Child's schedule
+        Route::get('/{parentId}/children/{studentId}/schedule', [ChildScheduleController::class, 'index']);
 
         // Child's attendance
         Route::get('/{parentId}/children/{studentId}/attendance', [ChildAttendanceController::class, 'index']);
