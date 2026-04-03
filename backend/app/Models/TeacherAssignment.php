@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class TeacherAssignment extends Model
 {
     protected $table = 'teacherassignment';
+    protected $primaryKey = 'assignment_id';
+    public $timestamps = false;
 
     protected $fillable = ['teacher_id', 'section_id', 'subject_id'];
 

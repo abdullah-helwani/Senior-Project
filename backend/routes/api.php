@@ -11,9 +11,15 @@ use App\Http\Controllers\Admin\SchoolClassController;
 use App\Http\Controllers\Admin\SectionController;
 use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\EnrollmentController;
+use App\Http\Controllers\Admin\ParentController as AdminParentController;
+use App\Http\Controllers\Admin\ComplaintController as AdminComplaintController;
+use App\Http\Controllers\Admin\TeacherAssignmentController;
 use App\Http\Controllers\Teacher\ScheduleController;
 use App\Http\Controllers\Teacher\HomeworkController;
 use App\Http\Controllers\Teacher\MessageController;
+use App\Http\Controllers\Teacher\AttendanceController as TeacherAttendanceController;
+use App\Http\Controllers\Teacher\PerformanceReportController;
+use App\Http\Controllers\Teacher\BehaviorLogController;
 use App\Http\Controllers\Student\HomeworkController as StudentHomeworkController;
 use App\Http\Controllers\Student\NotificationController as StudentNotificationController;
 use App\Http\Controllers\Student\MarksController as StudentMarksController;
@@ -87,6 +93,27 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/assessments/{id}',            [AssessmentController::class, 'destroy']);
         Route::post('/assessments/{id}/results',      [AssessmentController::class, 'storeResults']);
         Route::get('/assessments/{id}/results',       [AssessmentController::class, 'results']);
+
+        // Teacher Assignments — assign teachers to sections/subjects
+        Route::get('/teacher-assignments',         [TeacherAssignmentController::class, 'index']);
+        Route::post('/teacher-assignments',        [TeacherAssignmentController::class, 'store']);
+        Route::get('/teacher-assignments/{id}',    [TeacherAssignmentController::class, 'show']);
+        Route::put('/teacher-assignments/{id}',    [TeacherAssignmentController::class, 'update']);
+        Route::delete('/teacher-assignments/{id}', [TeacherAssignmentController::class, 'destroy']);
+
+        // Parents — CRUD + link/unlink children
+        Route::get('/parents',                              [AdminParentController::class, 'index']);
+        Route::post('/parents',                             [AdminParentController::class, 'store']);
+        Route::get('/parents/{id}',                         [AdminParentController::class, 'show']);
+        Route::put('/parents/{id}',                         [AdminParentController::class, 'update']);
+        Route::delete('/parents/{id}',                      [AdminParentController::class, 'destroy']);
+        Route::post('/parents/{id}/children',               [AdminParentController::class, 'addChild']);
+        Route::delete('/parents/{id}/children/{studentId}', [AdminParentController::class, 'removeChild']);
+
+        // Complaints — view, review, reply
+        Route::get('/complaints',         [AdminComplaintController::class, 'index']);
+        Route::get('/complaints/{id}',    [AdminComplaintController::class, 'show']);
+        Route::put('/complaints/{id}',    [AdminComplaintController::class, 'update']);
     });
 
     /*
@@ -110,6 +137,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{teacherId}/messages',      [MessageController::class, 'sent']);
         Route::post('/{teacherId}/messages',     [MessageController::class, 'send']);
         Route::get('/{teacherId}/messages/{id}', [MessageController::class, 'show']);
+
+        // Attendance — record + view per section
+        Route::post('/{teacherId}/attendance',   [TeacherAttendanceController::class, 'store']);
+        Route::get('/{teacherId}/attendance',    [TeacherAttendanceController::class, 'index']);
+
+        // Weekly performance report
+        Route::get('/{teacherId}/performance-report', [PerformanceReportController::class, 'index']);
+
+        // Behavior logs
+        Route::get('/{teacherId}/behavior-logs',         [BehaviorLogController::class, 'index']);
+        Route::post('/{teacherId}/behavior-logs',        [BehaviorLogController::class, 'store']);
+        Route::get('/{teacherId}/behavior-logs/{logId}', [BehaviorLogController::class, 'show']);
     });
 
     /*

@@ -316,6 +316,33 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // ─────────────────────────────────────────────
+        // 11b. BEHAVIOR LOGS
+        // ─────────────────────────────────────────────
+        DB::table('behaviorlog')->insert([
+            [
+                'student_id' => $student1Id, 'teacher_id' => $teacherId, 'section_id' => $sectionId,
+                'type' => 'negative', 'title' => 'Disruptive in class',
+                'description' => 'Ali was talking loudly and distracting other students during the math lesson.',
+                'date' => Carbon::now()->subDays(3)->toDateString(), 'notify_parent' => true,
+                'created_at' => $now, 'updated_at' => $now,
+            ],
+            [
+                'student_id' => $student1Id, 'teacher_id' => $teacherId, 'section_id' => $sectionId,
+                'type' => 'positive', 'title' => 'Helped a classmate',
+                'description' => 'Ali helped Fatima understand the algebra homework during break.',
+                'date' => Carbon::now()->subDays(1)->toDateString(), 'notify_parent' => false,
+                'created_at' => $now, 'updated_at' => $now,
+            ],
+            [
+                'student_id' => $student2Id, 'teacher_id' => $teacherId, 'section_id' => $sectionId,
+                'type' => 'positive', 'title' => 'Excellent participation',
+                'description' => 'Fatima actively participated in the science lab and led her group.',
+                'date' => Carbon::now()->subDays(2)->toDateString(), 'notify_parent' => false,
+                'created_at' => $now, 'updated_at' => $now,
+            ],
+        ]);
+
+        // ─────────────────────────────────────────────
         // 12. MESSAGES (teacher ↔ parent)
         // ─────────────────────────────────────────────
         DB::table('messages')->insert([
