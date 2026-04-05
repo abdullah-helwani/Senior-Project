@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "Bash(wc -l \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\Senior-Project\\\\backend\\\\app\\\\Models\"/*.php)",
+      "Bash(grep -r \"Schema::create\\\\|protected $table\" C:UsersASUSDesktopSenior-Projectbackend --include=*.php)",
+      "Bash(grep -r \"salarypayment\\\\|studentfeeplan\\\\|teacheravailability\\\\|vacationrequest\\\\|studentbusassignment\\\\|tripstopevent\\\\|surveillanceevent\" C:UsersASUSDesktopSenior-Projectbackend --include=*.php)",
+      "Bash(php artisan:*)",
+      "Bash(php inspect_tables.php)",
+      "Bash(php verify_models.php)"
+    ]
+  }
+}
