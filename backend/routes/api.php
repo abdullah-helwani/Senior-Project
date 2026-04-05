@@ -52,6 +52,20 @@ use App\Http\Controllers\ParentControllers\ChildHomeworkController;
 use App\Http\Controllers\ParentControllers\ChildScheduleController;
 use App\Http\Controllers\ParentControllers\InvoiceController as ParentInvoiceController;
 use App\Http\Controllers\ParentControllers\PaymentController as ParentPaymentController;
+use App\Http\Controllers\ParentControllers\ChildBusController;
+use App\Http\Controllers\Admin\BusController;
+use App\Http\Controllers\Admin\DriverController;
+use App\Http\Controllers\Admin\DriverAssignmentController;
+use App\Http\Controllers\Admin\BusRouteController;
+use App\Http\Controllers\Admin\RouteStopController;
+use App\Http\Controllers\Admin\StudentBusAssignmentController;
+use App\Http\Controllers\Admin\TripController;
+use App\Http\Controllers\Admin\TrackingController as AdminTrackingController;
+use App\Http\Controllers\Driver\TripController as DriverTripController;
+use App\Http\Controllers\Driver\ProfileController as DriverProfileController;
+use App\Http\Controllers\Driver\TrackingController as DriverTrackingController;
+use App\Http\Controllers\Driver\StopEventController as DriverStopEventController;
+use App\Http\Controllers\Student\BusController as StudentBusController;
 
 /*
 |--------------------------------------------------------------------------
@@ -203,6 +217,59 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/payments',        [PaymentController::class, 'store']);
         Route::get('/payments/{id}',    [PaymentController::class, 'show']);
         Route::delete('/payments/{id}', [PaymentController::class, 'destroy']);
+
+        // Transport — Buses
+        Route::get('/buses',         [BusController::class, 'index']);
+        Route::post('/buses',        [BusController::class, 'store']);
+        Route::get('/buses/{id}',    [BusController::class, 'show']);
+        Route::put('/buses/{id}',    [BusController::class, 'update']);
+        Route::delete('/buses/{id}', [BusController::class, 'destroy']);
+
+        // Transport — Drivers
+        Route::get('/drivers',         [DriverController::class, 'index']);
+        Route::post('/drivers',        [DriverController::class, 'store']);
+        Route::get('/drivers/{id}',    [DriverController::class, 'show']);
+        Route::put('/drivers/{id}',    [DriverController::class, 'update']);
+        Route::delete('/drivers/{id}', [DriverController::class, 'destroy']);
+
+        // Transport — Driver ↔ Bus assignments
+        Route::get('/driver-assignments',         [DriverAssignmentController::class, 'index']);
+        Route::post('/driver-assignments',        [DriverAssignmentController::class, 'store']);
+        Route::get('/driver-assignments/{id}',    [DriverAssignmentController::class, 'show']);
+        Route::delete('/driver-assignments/{id}', [DriverAssignmentController::class, 'destroy']);
+
+        // Transport — Routes
+        Route::get('/bus-routes',         [BusRouteController::class, 'index']);
+        Route::post('/bus-routes',        [BusRouteController::class, 'store']);
+        Route::get('/bus-routes/{id}',    [BusRouteController::class, 'show']);
+        Route::put('/bus-routes/{id}',    [BusRouteController::class, 'update']);
+        Route::delete('/bus-routes/{id}', [BusRouteController::class, 'destroy']);
+
+        // Transport — Route stops
+        Route::get('/route-stops',         [RouteStopController::class, 'index']);
+        Route::post('/route-stops',        [RouteStopController::class, 'store']);
+        Route::get('/route-stops/{id}',    [RouteStopController::class, 'show']);
+        Route::put('/route-stops/{id}',    [RouteStopController::class, 'update']);
+        Route::delete('/route-stops/{id}', [RouteStopController::class, 'destroy']);
+
+        // Transport — Student ↔ Bus assignments
+        Route::get('/student-bus-assignments',         [StudentBusAssignmentController::class, 'index']);
+        Route::post('/student-bus-assignments',        [StudentBusAssignmentController::class, 'store']);
+        Route::get('/student-bus-assignments/{id}',    [StudentBusAssignmentController::class, 'show']);
+        Route::put('/student-bus-assignments/{id}',    [StudentBusAssignmentController::class, 'update']);
+        Route::delete('/student-bus-assignments/{id}', [StudentBusAssignmentController::class, 'destroy']);
+
+        // Transport — Trips
+        Route::get('/trips',         [TripController::class, 'index']);
+        Route::post('/trips',        [TripController::class, 'store']);
+        Route::get('/trips/{id}',    [TripController::class, 'show']);
+        Route::put('/trips/{id}',    [TripController::class, 'update']);
+        Route::delete('/trips/{id}', [TripController::class, 'destroy']);
+
+        // Transport — Trip live tracking
+        Route::get('/trips/{tripId}/location', [AdminTrackingController::class, 'location']);
+        Route::get('/trips/{tripId}/trail',    [AdminTrackingController::class, 'trail']);
+        Route::get('/trips/{tripId}/events',   [AdminTrackingController::class, 'events']);
     });
 
     /*
@@ -286,6 +353,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{studentId}/notifications',                    [StudentNotificationController::class, 'index']);
         Route::put('/{studentId}/notifications/{recipientId}/read', [StudentNotificationController::class, 'markRead']);
         Route::put('/{studentId}/notifications/read-all',           [StudentNotificationController::class, 'markAllRead']);
+
+        // Bus — assignment, live location, boarding history
+        Route::get('/{studentId}/bus/assignment',    [StudentBusController::class, 'assignment']);
+        Route::get('/{studentId}/bus/live-location', [StudentBusController::class, 'liveLocation']);
+        Route::get('/{studentId}/bus/events',        [StudentBusController::class, 'events']);
     });
 
     /*
@@ -338,5 +410,33 @@ Route::middleware('auth:sanctum')->group(function () {
         // Payments — view own payment history
         Route::get('/{parentId}/payments',      [ParentPaymentController::class, 'index']);
         Route::get('/{parentId}/payments/{id}', [ParentPaymentController::class, 'show']);
+
+        // Child bus tracking
+        Route::get('/{parentId}/children/{studentId}/bus/assignment',    [ChildBusController::class, 'assignment']);
+        Route::get('/{parentId}/children/{studentId}/bus/live-location', [ChildBusController::class, 'liveLocation']);
+        Route::get('/{parentId}/children/{studentId}/bus/events',        [ChildBusController::class, 'events']);
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Driver Routes
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware('role:driver')->prefix('driver')->group(function () {
+
+        // Profile — driver info + assigned bus + routes driven
+        Route::get('/{driverId}/profile', [DriverProfileController::class, 'show']);
+
+        // Trips
+        Route::get('/{driverId}/trips',          [DriverTripController::class, 'index']);
+        Route::get('/{driverId}/trips/today',    [DriverTripController::class, 'today']);
+        Route::get('/{driverId}/trips/{tripId}', [DriverTripController::class, 'show']);
+
+        // GPS pings (live tracking)
+        Route::post('/{driverId}/trips/{tripId}/pings', [DriverTrackingController::class, 'store']);
+
+        // Stop events (boarding / drop-off button)
+        Route::get('/{driverId}/trips/{tripId}/stop-events',  [DriverStopEventController::class, 'index']);
+        Route::post('/{driverId}/trips/{tripId}/stop-events', [DriverStopEventController::class, 'store']);
     });
 });
