@@ -165,15 +165,15 @@ class DatabaseSeeder extends Seeder
         ], 'schedule_id');
 
         DB::table('scheduleslot')->insert([
+            ['schedule_id' => $scheduleId, 'subject_id' => $mathId, 'teacher_id' => $teacherId, 'dayofweek' => 'Sunday', 'starttime' => '08:00'],
+            ['schedule_id' => $scheduleId, 'subject_id' => $scienceId, 'teacher_id' => $teacherId, 'dayofweek' => 'Sunday', 'starttime' => '09:00'],
+            ['schedule_id' => $scheduleId, 'subject_id' => $englishId, 'teacher_id' => $teacher2Id, 'dayofweek' => 'Sunday', 'starttime' => '10:00'],
             ['schedule_id' => $scheduleId, 'subject_id' => $mathId, 'teacher_id' => $teacherId, 'dayofweek' => 'Monday', 'starttime' => '08:00'],
-            ['schedule_id' => $scheduleId, 'subject_id' => $scienceId, 'teacher_id' => $teacherId, 'dayofweek' => 'Monday', 'starttime' => '09:00'],
-            ['schedule_id' => $scheduleId, 'subject_id' => $englishId, 'teacher_id' => $teacher2Id, 'dayofweek' => 'Monday', 'starttime' => '10:00'],
-            ['schedule_id' => $scheduleId, 'subject_id' => $mathId, 'teacher_id' => $teacherId, 'dayofweek' => 'Tuesday', 'starttime' => '08:00'],
-            ['schedule_id' => $scheduleId, 'subject_id' => $englishId, 'teacher_id' => $teacher2Id, 'dayofweek' => 'Tuesday', 'starttime' => '09:00'],
-            ['schedule_id' => $scheduleId, 'subject_id' => $scienceId, 'teacher_id' => $teacherId, 'dayofweek' => 'Wednesday', 'starttime' => '08:00'],
-            ['schedule_id' => $scheduleId, 'subject_id' => $mathId, 'teacher_id' => $teacherId, 'dayofweek' => 'Wednesday', 'starttime' => '09:00'],
-            ['schedule_id' => $scheduleId, 'subject_id' => $englishId, 'teacher_id' => $teacher2Id, 'dayofweek' => 'Thursday', 'starttime' => '08:00'],
-            ['schedule_id' => $scheduleId, 'subject_id' => $scienceId, 'teacher_id' => $teacherId, 'dayofweek' => 'Thursday', 'starttime' => '09:00'],
+            ['schedule_id' => $scheduleId, 'subject_id' => $englishId, 'teacher_id' => $teacher2Id, 'dayofweek' => 'Monday', 'starttime' => '09:00'],
+            ['schedule_id' => $scheduleId, 'subject_id' => $scienceId, 'teacher_id' => $teacherId, 'dayofweek' => 'Tuesday', 'starttime' => '08:00'],
+            ['schedule_id' => $scheduleId, 'subject_id' => $mathId, 'teacher_id' => $teacherId, 'dayofweek' => 'Tuesday', 'starttime' => '09:00'],
+            ['schedule_id' => $scheduleId, 'subject_id' => $englishId, 'teacher_id' => $teacher2Id, 'dayofweek' => 'Wednesday', 'starttime' => '08:00'],
+            ['schedule_id' => $scheduleId, 'subject_id' => $scienceId, 'teacher_id' => $teacherId, 'dayofweek' => 'Wednesday', 'starttime' => '09:00'],
         ]);
 
         // ─────────────────────────────────────────────

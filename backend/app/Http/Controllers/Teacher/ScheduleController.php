@@ -34,7 +34,7 @@ class ScheduleController extends Controller
 
         $slots = $query->get();
 
-        $dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        $dayOrder = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
         $grouped = $slots
             ->sortBy('starttime')

@@ -21,7 +21,7 @@ class DashboardController extends Controller
     public function index()
     {
         $today = Carbon::today();
-        $thisWeekStart = Carbon::now()->startOfWeek(Carbon::MONDAY);
+        $thisWeekStart = Carbon::now()->startOfWeek(Carbon::SUNDAY);
         $thisMonthStart = Carbon::now()->startOfMonth();
 
         // ── User counts ──

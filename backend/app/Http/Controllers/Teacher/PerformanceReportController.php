@@ -35,8 +35,8 @@ class PerformanceReportController extends Controller
 
         $sectionId = $request->section_id;
         $weekOf = $request->input('week_of', now()->toDateString());
-        $weekStart = Carbon::parse($weekOf)->startOfWeek(Carbon::MONDAY);
-        $weekEnd = $weekStart->copy()->endOfWeek(Carbon::FRIDAY);
+        $weekStart = Carbon::parse($weekOf)->startOfWeek(Carbon::SUNDAY);
+        $weekEnd = $weekStart->copy()->addDays(4); // Sunday through Thursday
 
         // Get enrolled students
         $enrollments = Enrollment::where('section_id', $sectionId)

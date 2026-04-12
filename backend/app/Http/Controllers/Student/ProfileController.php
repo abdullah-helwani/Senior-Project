@@ -26,6 +26,7 @@ class ProfileController extends Controller
             'name'            => $student->user->name,
             'email'           => $student->user->email,
             'phone'           => $student->user->phone,
+            'profile_picture' => $student->user->profile_picture,
             'date_of_birth'   => $student->date_of_birth,
             'gender'          => $student->gender,
             'address'         => $student->address,

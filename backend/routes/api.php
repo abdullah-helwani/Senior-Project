@@ -61,11 +61,23 @@ use App\Http\Controllers\Admin\RouteStopController;
 use App\Http\Controllers\Admin\StudentBusAssignmentController;
 use App\Http\Controllers\Admin\TripController;
 use App\Http\Controllers\Admin\TrackingController as AdminTrackingController;
+use App\Http\Controllers\Admin\VacationRequestController as AdminVacationRequestController;
+use App\Http\Controllers\Admin\TeacherAvailabilityController;
+use App\Http\Controllers\Admin\AnalyticsReportController;
+use App\Http\Controllers\Teacher\VacationRequestController as TeacherVacationRequestController;
+use App\Http\Controllers\Teacher\AvailabilityController as TeacherAvailabilityCtrl;
 use App\Http\Controllers\Driver\TripController as DriverTripController;
 use App\Http\Controllers\Driver\ProfileController as DriverProfileController;
 use App\Http\Controllers\Driver\TrackingController as DriverTrackingController;
 use App\Http\Controllers\Driver\StopEventController as DriverStopEventController;
 use App\Http\Controllers\Student\BusController as StudentBusController;
+use App\Http\Controllers\Admin\ExportController;
+use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\CameraController;
+use App\Http\Controllers\Admin\SurveillanceEventController;
+use App\Http\Controllers\Ai\SurveillanceController as AiSurveillanceController;
+use App\Http\Controllers\Admin\ReportCardController;
+use App\Http\Controllers\AssessmentCalendarController;
 
 /*
 |--------------------------------------------------------------------------
@@ -84,6 +96,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::put('/change-password', [AuthController::class, 'changePassword']);
+    Route::post('/profile-picture', [AuthController::class, 'updateProfilePicture']);
+    Route::delete('/profile-picture', [AuthController::class, 'deleteProfilePicture']);
 
     /*
     |--------------------------------------------------------------------------
@@ -98,6 +112,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Create any user account (student / teacher / parent / admin)
         Route::post('/users', [UserController::class, 'store']);
         Route::put('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
+        Route::put('/users/{id}/toggle-active', [UserController::class, 'toggleActive']);
+        Route::post('/users/{id}/profile-picture', [UserController::class, 'updateProfilePicture']);
+        Route::delete('/users/{id}/profile-picture', [UserController::class, 'deleteProfilePicture']);
 
         // Students — CRUD + search + filter
         Route::get('/students',         [StudentController::class, 'index']);
@@ -270,6 +287,63 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/trips/{tripId}/location', [AdminTrackingController::class, 'location']);
         Route::get('/trips/{tripId}/trail',    [AdminTrackingController::class, 'trail']);
         Route::get('/trips/{tripId}/events',   [AdminTrackingController::class, 'events']);
+
+        // Vacation Requests — review + approve/reject
+        Route::get('/vacation-requests',         [AdminVacationRequestController::class, 'index']);
+        Route::get('/vacation-requests/{id}',    [AdminVacationRequestController::class, 'show']);
+        Route::put('/vacation-requests/{id}',    [AdminVacationRequestController::class, 'update']);
+        Route::delete('/vacation-requests/{id}', [AdminVacationRequestController::class, 'destroy']);
+
+        // Teacher Availability — manage teacher schedules
+        Route::get('/teacher-availability',         [TeacherAvailabilityController::class, 'index']);
+        Route::post('/teacher-availability',        [TeacherAvailabilityController::class, 'store']);
+        Route::get('/teacher-availability/{id}',    [TeacherAvailabilityController::class, 'show']);
+        Route::put('/teacher-availability/{id}',    [TeacherAvailabilityController::class, 'update']);
+        Route::delete('/teacher-availability/{id}', [TeacherAvailabilityController::class, 'destroy']);
+
+        // Analytics & Reports — generate + view reports
+        Route::get('/analytics/reports',         [AnalyticsReportController::class, 'index']);
+        Route::post('/analytics/reports',        [AnalyticsReportController::class, 'store']);
+        Route::get('/analytics/reports/{id}',    [AnalyticsReportController::class, 'show']);
+        Route::delete('/analytics/reports/{id}', [AnalyticsReportController::class, 'destroy']);
+
+        // Analytics — live stats (no saved report)
+        Route::get('/analytics/live/attendance', [AnalyticsReportController::class, 'liveAttendance']);
+        Route::get('/analytics/live/academic',   [AnalyticsReportController::class, 'liveAcademic']);
+        Route::get('/analytics/live/behavior',   [AnalyticsReportController::class, 'liveBehavior']);
+
+        // Audit Logs — track who changed what and when
+        Route::get('/audit-logs',                                  [AuditLogController::class, 'index']);
+        Route::get('/audit-logs/{id}',                             [AuditLogController::class, 'show']);
+        Route::get('/audit-logs/user/{userId}',                    [AuditLogController::class, 'userHistory']);
+        Route::get('/audit-logs/resource/{resource}/{resourceId}', [AuditLogController::class, 'resourceHistory']);
+
+        // Export — CSV + PDF downloads
+        Route::get('/export/marks/csv',       [ExportController::class, 'marksCsv']);
+        Route::get('/export/marks/pdf',       [ExportController::class, 'marksPdf']);
+        Route::get('/export/attendance/csv',  [ExportController::class, 'attendanceCsv']);
+        Route::get('/export/attendance/pdf',  [ExportController::class, 'attendancePdf']);
+
+        // Cameras — CRUD
+        Route::get('/cameras',         [CameraController::class, 'index']);
+        Route::post('/cameras',        [CameraController::class, 'store']);
+        Route::get('/cameras/{id}',    [CameraController::class, 'show']);
+        Route::put('/cameras/{id}',    [CameraController::class, 'update']);
+        Route::delete('/cameras/{id}', [CameraController::class, 'destroy']);
+
+        // Surveillance Events — view + filter + summary
+        Route::get('/surveillance-events',         [SurveillanceEventController::class, 'index']);
+        Route::get('/surveillance-events/summary',  [SurveillanceEventController::class, 'summary']);
+        Route::get('/surveillance-events/{id}',    [SurveillanceEventController::class, 'show']);
+        Route::delete('/surveillance-events/{id}', [SurveillanceEventController::class, 'destroy']);
+
+        // Report Cards — PDF generation
+        Route::get('/report-cards/student/{studentId}',         [ReportCardController::class, 'student']);
+        Route::get('/report-cards/student/{studentId}/preview', [ReportCardController::class, 'preview']);
+        Route::get('/report-cards/section/{sectionId}',         [ReportCardController::class, 'section']);
+
+        // Assessment Calendar — all sections
+        Route::get('/assessment-calendar', [AssessmentCalendarController::class, 'adminCalendar']);
     });
 
     /*
@@ -315,6 +389,21 @@ Route::middleware('auth:sanctum')->group(function () {
         // Salary — view own salary history
         Route::get('/{teacherId}/salary',      [TeacherSalaryController::class, 'index']);
         Route::get('/{teacherId}/salary/{id}', [TeacherSalaryController::class, 'show']);
+
+        // Vacation Requests — submit + view own requests
+        Route::get('/{teacherId}/vacation-requests',         [TeacherVacationRequestController::class, 'index']);
+        Route::post('/{teacherId}/vacation-requests',        [TeacherVacationRequestController::class, 'store']);
+        Route::get('/{teacherId}/vacation-requests/{id}',    [TeacherVacationRequestController::class, 'show']);
+        Route::delete('/{teacherId}/vacation-requests/{id}', [TeacherVacationRequestController::class, 'destroy']);
+
+        // Assessment Calendar — upcoming exams/assessments for teacher's sections
+        Route::get('/{teacherId}/assessment-calendar', [AssessmentCalendarController::class, 'teacherCalendar']);
+
+        // Availability — manage own availability slots
+        Route::get('/{teacherId}/availability',         [TeacherAvailabilityCtrl::class, 'index']);
+        Route::post('/{teacherId}/availability',        [TeacherAvailabilityCtrl::class, 'store']);
+        Route::put('/{teacherId}/availability/{id}',    [TeacherAvailabilityCtrl::class, 'update']);
+        Route::delete('/{teacherId}/availability/{id}', [TeacherAvailabilityCtrl::class, 'destroy']);
     });
 
     /*
@@ -353,6 +442,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{studentId}/notifications',                    [StudentNotificationController::class, 'index']);
         Route::put('/{studentId}/notifications/{recipientId}/read', [StudentNotificationController::class, 'markRead']);
         Route::put('/{studentId}/notifications/read-all',           [StudentNotificationController::class, 'markAllRead']);
+
+        // Assessment Calendar — upcoming exams/assessments for student's section
+        Route::get('/{studentId}/assessment-calendar', [AssessmentCalendarController::class, 'studentCalendar']);
 
         // Bus — assignment, live location, boarding history
         Route::get('/{studentId}/bus/assignment',    [StudentBusController::class, 'assignment']);
@@ -411,6 +503,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{parentId}/payments',      [ParentPaymentController::class, 'index']);
         Route::get('/{parentId}/payments/{id}', [ParentPaymentController::class, 'show']);
 
+        // Child's assessment calendar
+        Route::get('/{parentId}/children/{studentId}/assessment-calendar', [AssessmentCalendarController::class, 'parentCalendar']);
+
         // Child bus tracking
         Route::get('/{parentId}/children/{studentId}/bus/assignment',    [ChildBusController::class, 'assignment']);
         Route::get('/{parentId}/children/{studentId}/bus/live-location', [ChildBusController::class, 'liveLocation']);
@@ -438,5 +533,14 @@ Route::middleware('auth:sanctum')->group(function () {
         // Stop events (boarding / drop-off button)
         Route::get('/{driverId}/trips/{tripId}/stop-events',  [DriverStopEventController::class, 'index']);
         Route::post('/{driverId}/trips/{tripId}/stop-events', [DriverStopEventController::class, 'store']);
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | AI Module Routes (authenticated service account)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('ai')->group(function () {
+        Route::post('/surveillance-events', [AiSurveillanceController::class, 'store']);
     });
 });

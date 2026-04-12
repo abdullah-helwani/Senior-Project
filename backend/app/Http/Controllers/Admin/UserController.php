@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
@@ -97,5 +98,74 @@ class UserController extends Controller
         $user->tokens()->delete();
 
         return response()->json(['message' => 'Password reset successfully. User has been logged out of all sessions.']);
+    }
+
+    /**
+     * PUT /admin/users/{id}/toggle-active
+     *
+     * Deactivate or reactivate a user account.
+     */
+    public function toggleActive(int $id)
+    {
+        $user = User::findOrFail($id);
+
+        $user->update(['is_active' => !$user->is_active]);
+
+        // If deactivated, revoke all tokens to force logout
+        if (!$user->is_active) {
+            $user->tokens()->delete();
+        }
+
+        return response()->json([
+            'message'   => $user->is_active ? 'User reactivated successfully.' : 'User deactivated successfully.',
+            'is_active' => $user->is_active,
+        ]);
+    }
+
+    /**
+     * POST /admin/users/{id}/profile-picture
+     *
+     * Upload or replace a user's profile picture.
+     */
+    public function updateProfilePicture(int $id, Request $request)
+    {
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'profile_picture' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
+        if ($user->profile_picture) {
+            Storage::disk('public')->delete($user->profile_picture);
+        }
+
+        $path = $request->file('profile_picture')->store(
+            "profile-pictures/{$user->id}",
+            'public'
+        );
+
+        $user->update(['profile_picture' => $path]);
+
+        return response()->json([
+            'message'         => 'Profile picture updated successfully.',
+            'profile_picture' => $path,
+        ]);
+    }
+
+    /**
+     * DELETE /admin/users/{id}/profile-picture
+     *
+     * Remove a user's profile picture.
+     */
+    public function deleteProfilePicture(int $id)
+    {
+        $user = User::findOrFail($id);
+
+        if ($user->profile_picture) {
+            Storage::disk('public')->delete($user->profile_picture);
+            $user->update(['profile_picture' => null]);
+        }
+
+        return response()->json(['message' => 'Profile picture removed successfully.']);
     }
 }

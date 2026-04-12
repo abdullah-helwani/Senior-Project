@@ -36,12 +36,13 @@ class SubmissionController extends Controller
     /**
      * POST /student/{studentId}/submissions
      *
-     * Submit homework.
+     * Submit homework with optional file attachment.
      */
     public function store(int $studentId, Request $request)
     {
         $request->validate([
             'homework_id' => 'required|integer',
+            'file'        => 'nullable|file|max:10240|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,txt,zip,jpg,jpeg,png',
         ]);
 
         // Check if already submitted
@@ -53,11 +54,20 @@ class SubmissionController extends Controller
             return response()->json(['message' => 'You have already submitted this homework.'], 422);
         }
 
+        $filePath = null;
+        if ($request->hasFile('file')) {
+            $filePath = $request->file('file')->store(
+                "submissions/{$request->homework_id}/{$studentId}",
+                'public'
+            );
+        }
+
         $submission = HomeworkSubmission::create([
             'homework_id' => $request->homework_id,
             'student_id'  => $studentId,
             'submittedat' => now(),
             'status'      => 'submitted',
+            'file_path'   => $filePath,
         ]);
 
         return response()->json(

@@ -21,11 +21,12 @@ class ProfileController extends Controller
             ->firstOrFail();
 
         return response()->json([
-            'id'            => $teacher->id,
-            'name'          => $teacher->user->name,
-            'email'         => $teacher->user->email,
-            'phone'         => $teacher->user->phone,
-            'date_of_birth' => $teacher->date_of_birth,
+            'id'              => $teacher->id,
+            'name'            => $teacher->user->name,
+            'email'           => $teacher->user->email,
+            'phone'           => $teacher->user->phone,
+            'profile_picture' => $teacher->user->profile_picture,
+            'date_of_birth'   => $teacher->date_of_birth,
             'gender'        => $teacher->gender,
             'address'       => $teacher->address,
             'hire_date'     => $teacher->hire_date,

@@ -15,11 +15,18 @@ class Message extends Model
         'read_at',
     ];
 
+    protected $appends = ['is_read'];
+
     protected function casts(): array
     {
         return [
             'read_at' => 'datetime',
         ];
+    }
+
+    public function getIsReadAttribute(): bool
+    {
+        return $this->read_at !== null;
     }
 
     public function sender()

@@ -36,10 +36,11 @@ class AuthController extends Controller
             'token'     => $token,
             'role'      => $user->role_type,
             'user'      => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
+                'id'              => $user->id,
+                'name'            => $user->name,
+                'email'           => $user->email,
+                'phone'           => $user->phone,
+                'profile_picture' => $user->profile_picture,
             ],
         ]);
     }
@@ -49,12 +50,13 @@ class AuthController extends Controller
         $user = $request->user();
 
         $profile = [
-            'id'        => $user->id,
-            'name'      => $user->name,
-            'email'     => $user->email,
-            'phone'     => $user->phone,
-            'role'      => $user->role_type,
-            'is_active' => $user->is_active,
+            'id'              => $user->id,
+            'name'            => $user->name,
+            'email'           => $user->email,
+            'phone'           => $user->phone,
+            'profile_picture' => $user->profile_picture,
+            'role'            => $user->role_type,
+            'is_active'       => $user->is_active,
         ];
 
         match ($user->role_type) {
@@ -94,6 +96,54 @@ class AuthController extends Controller
         $user->update(['password' => Hash::make($request->new_password)]);
 
         return response()->json(['message' => 'Password changed successfully.']);
+    }
+
+    /**
+     * POST /api/profile-picture
+     *
+     * Upload or update the authenticated user's profile picture.
+     */
+    public function updateProfilePicture(Request $request)
+    {
+        $request->validate([
+            'profile_picture' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
+        $user = $request->user();
+
+        // Delete old picture if exists
+        if ($user->profile_picture) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($user->profile_picture);
+        }
+
+        $path = $request->file('profile_picture')->store(
+            "profile-pictures/{$user->id}",
+            'public'
+        );
+
+        $user->update(['profile_picture' => $path]);
+
+        return response()->json([
+            'message'         => 'Profile picture updated successfully.',
+            'profile_picture' => $path,
+        ]);
+    }
+
+    /**
+     * DELETE /api/profile-picture
+     *
+     * Remove the authenticated user's profile picture.
+     */
+    public function deleteProfilePicture(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->profile_picture) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($user->profile_picture);
+            $user->update(['profile_picture' => null]);
+        }
+
+        return response()->json(['message' => 'Profile picture removed successfully.']);
     }
 
     public function logout(Request $request)

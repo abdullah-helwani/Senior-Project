@@ -16,6 +16,7 @@ class HomeworkSubmission extends Model
         'submittedat',
         'score',
         'status',
+        'file_path',
     ];
 
     protected function casts(): array
