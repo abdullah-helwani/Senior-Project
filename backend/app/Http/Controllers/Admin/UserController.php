@@ -17,6 +17,76 @@ use Illuminate\Validation\Rules\Password;
 class UserController extends Controller
 {
     /**
+     * GET /admin/users
+     *
+     * List all users. Filters: role_type, is_active, search (name or email)
+     */
+    public function index(Request $request)
+    {
+        $query = User::query();
+
+        if ($request->filled('role_type')) {
+            $query->where('role_type', $request->role_type);
+        }
+
+        if ($request->filled('is_active')) {
+            $query->where('is_active', $request->is_active === 'true' || $request->is_active === '1');
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'ilike', "%{$search}%")
+                  ->orWhere('email', 'ilike', "%{$search}%");
+            });
+        }
+
+        $users = $query->orderByDesc('created_at')
+            ->paginate($request->input('per_page', 20));
+
+        return response()->json($users);
+    }
+
+    /**
+     * GET /admin/users/{id}
+     */
+    public function show(int $id)
+    {
+        $user = User::findOrFail($id);
+
+        // Load role-specific profile
+        match ($user->role_type) {
+            'student' => $user->load('student'),
+            'teacher' => $user->load('teacher'),
+            'parent'  => $user->load('guardian'),
+            'admin'   => $user->load('admin'),
+            default   => null,
+        };
+
+        return response()->json($user);
+    }
+
+    /**
+     * PUT /admin/users/{id}
+     *
+     * Update user account info.
+     */
+    public function update(int $id, Request $request)
+    {
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'name'  => 'sometimes|string|max:255',
+            'email' => "sometimes|email|unique:users,email,{$id}",
+            'phone' => 'sometimes|nullable|string|max:20',
+        ]);
+
+        $user->update($request->only(['name', 'email', 'phone']));
+
+        return response()->json($user);
+    }
+
+    /**
      * Create a new user account (admin, student, teacher, or parent).
      */
     public function store(Request $request)

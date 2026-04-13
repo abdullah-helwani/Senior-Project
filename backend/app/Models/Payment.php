@@ -15,6 +15,9 @@ class Payment extends Model
         'parent_id',
         'amount',
         'method',
+        'stripe_session_id',
+        'stripe_payment_intent',
+        'status',
         'paidat',
     ];
 

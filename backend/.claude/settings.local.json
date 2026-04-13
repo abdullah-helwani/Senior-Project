@@ -28,7 +28,17 @@
       "Bash(ls -1 app/Http/Controllers/ParentControllers/*.php)",
       "Bash(ls -1 app/Http/Controllers/Driver/*.php)",
       "Bash(xargs -I {} basename {})",
-      "Bash(composer require:*)"
+      "Bash(composer require:*)",
+      "Bash(find /c/Users/ASUS/Desktop/Senior-Project/backend/app/Http/Controllers -name \"*.php\" -exec grep -l \"file\\\\|upload\\\\|attachment\" {} \\\\;)",
+      "Read(//c/Users/ASUS/Desktop/Senior-Project/**)",
+      "Bash(npx create-react-app:*)",
+      "Bash(npm create:*)",
+      "Bash(npx --yes create-vite@latest admin-dashboard --template react-ts)",
+      "Bash(npm install:*)",
+      "Bash(npx vite:*)",
+      "Bash(npx --no vite build)",
+      "Bash(grep -l \"assessment\\\\|Assessment\" \"C:/Users/ASUS/Desktop/Senior-Project/backend/database/migrations\"/*.php)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

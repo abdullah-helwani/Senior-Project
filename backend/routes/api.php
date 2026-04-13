@@ -78,13 +78,22 @@ use App\Http\Controllers\Admin\SurveillanceEventController;
 use App\Http\Controllers\Ai\SurveillanceController as AiSurveillanceController;
 use App\Http\Controllers\Admin\ReportCardController;
 use App\Http\Controllers\AssessmentCalendarController;
+use App\Http\Controllers\ParentControllers\StripeController;
+use App\Http\Controllers\Webhook\StripeWebhookController;
 
 /*
 |--------------------------------------------------------------------------
 | Auth Routes (public)
 |--------------------------------------------------------------------------
 */
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+
+/*
+|--------------------------------------------------------------------------
+| Webhooks (no auth — verified by signature)
+|--------------------------------------------------------------------------
+*/
+Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle']);
 
 /*
 |--------------------------------------------------------------------------
@@ -110,7 +119,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index']);
 
         // Create any user account (student / teacher / parent / admin)
-        Route::post('/users', [UserController::class, 'store']);
+        Route::get('/users',      [UserController::class, 'index']);
+        Route::get('/users/{id}', [UserController::class, 'show']);
+        Route::post('/users',     [UserController::class, 'store']);
+        Route::put('/users/{id}', [UserController::class, 'update']);
         Route::put('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
         Route::put('/users/{id}/toggle-active', [UserController::class, 'toggleActive']);
         Route::post('/users/{id}/profile-picture', [UserController::class, 'updateProfilePicture']);
@@ -502,6 +514,10 @@ Route::middleware('auth:sanctum')->group(function () {
         // Payments — view own payment history
         Route::get('/{parentId}/payments',      [ParentPaymentController::class, 'index']);
         Route::get('/{parentId}/payments/{id}', [ParentPaymentController::class, 'show']);
+
+        // Stripe — online payment checkout
+        Route::post('/{parentId}/payments/checkout',                     [StripeController::class, 'checkout']);
+        Route::get('/{parentId}/payments/checkout/{sessionId}/status',   [StripeController::class, 'status']);
 
         // Child's assessment calendar
         Route::get('/{parentId}/children/{studentId}/assessment-calendar', [AssessmentCalendarController::class, 'parentCalendar']);

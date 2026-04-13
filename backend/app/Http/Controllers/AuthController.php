@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -10,6 +11,9 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    private const MAX_ATTEMPTS = 5;
+    private const LOCKOUT_MINUTES = 15;
+
     public function login(Request $request)
     {
         $request->validate([
@@ -17,13 +21,43 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
+        // Check if the account is locked
+        $user = User::where('email', $request->email)->first();
+
+        if ($user && $user->locked_until && $user->locked_until->isFuture()) {
+            $minutes = now()->diffInMinutes($user->locked_until) + 1;
+            return response()->json([
+                'message' => "Account is locked due to too many failed login attempts. Try again in {$minutes} minute(s).",
+            ], 423);
+        }
+
         if (! Auth::attempt($request->only('email', 'password'))) {
+            // Increment failed attempts if user exists
+            if ($user) {
+                $user->increment('failed_login_attempts');
+
+                if ($user->failed_login_attempts >= self::MAX_ATTEMPTS) {
+                    $user->update(['locked_until' => now()->addMinutes(self::LOCKOUT_MINUTES)]);
+                    return response()->json([
+                        'message' => 'Account locked due to too many failed login attempts. Try again in ' . self::LOCKOUT_MINUTES . ' minutes.',
+                    ], 423);
+                }
+
+                $remaining = self::MAX_ATTEMPTS - $user->failed_login_attempts;
+                throw ValidationException::withMessages([
+                    'email' => ["The provided credentials are incorrect. {$remaining} attempt(s) remaining."],
+                ]);
+            }
+
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
 
         $user = Auth::user();
+
+        // Reset failed attempts on successful login
+        $user->update(['failed_login_attempts' => 0, 'locked_until' => null]);
 
         if (! $user->is_active) {
             Auth::logout();
