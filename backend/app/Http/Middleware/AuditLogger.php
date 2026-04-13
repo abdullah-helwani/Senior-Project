@@ -20,6 +20,11 @@ class AuditLogger
             return $response;
         }
 
+        // Skip webhook routes — they're not user-initiated
+        if (str_contains($request->path(), 'webhooks/')) {
+            return $response;
+        }
+
         // Only log successful mutations (2xx status)
         if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {
             return $response;

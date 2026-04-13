@@ -70,7 +70,7 @@ class PaymentController extends Controller
             'invoice_id' => 'required|exists:invoice,invoice_id',
             'parent_id'  => 'required|exists:parent,parent_id',
             'amount'     => 'required|numeric|min:0.01',
-            'method'     => 'required|in:cash,card,bank_transfer,cheque',
+            'method'     => 'required|in:cash,card,bank_transfer,cheque,stripe',
             'paidat'     => 'nullable|date',
         ]);
 

@@ -21,6 +21,8 @@ class User extends Authenticatable
         'role_type',
         'is_active',
         'profile_picture',
+        'failed_login_attempts',
+        'locked_until',
     ];
 
     protected $hidden = [
@@ -34,6 +36,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'locked_until' => 'datetime',
         ];
     }
 

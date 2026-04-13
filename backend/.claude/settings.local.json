@@ -28,7 +28,8 @@
       "Bash(ls -1 app/Http/Controllers/ParentControllers/*.php)",
       "Bash(ls -1 app/Http/Controllers/Driver/*.php)",
       "Bash(xargs -I {} basename {})",
-      "Bash(composer require:*)"
+      "Bash(composer require:*)",
+      "Bash(find /c/Users/ASUS/Desktop/Senior-Project/backend/app/Http/Controllers -name \"*.php\" -exec grep -l \"file\\\\|upload\\\\|attachment\" {} \\\\;)"
     ]
   }
 }
