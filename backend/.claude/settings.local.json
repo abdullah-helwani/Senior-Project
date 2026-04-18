@@ -38,7 +38,10 @@
       "Bash(npx vite:*)",
       "Bash(npx --no vite build)",
       "Bash(grep -l \"assessment\\\\|Assessment\" \"C:/Users/ASUS/Desktop/Senior-Project/backend/database/migrations\"/*.php)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npm list:*)",
+      "Bash(python \"C:/Users/ASUS/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/d6280de3-2d5f-4c22-9fe1-31d1b2537f8e/2b5628ff-efcb-4b1d-b5e1-c734bd6fcf40/skills/docx/scripts/office/validate.py\" \"C:/Users/ASUS/Desktop/Senior-Project/docs/Frontend_Integration_Package.docx\")",
+      "Bash(python -c \"import zipfile; z=zipfile.ZipFile\\(r'C:/Users/ASUS/Desktop/Senior-Project/docs/Frontend_Integration_Package.docx'\\); print\\('VALID ZIP, files:', len\\(z.namelist\\(\\)\\)\\); print\\(z.namelist\\(\\)[:10]\\)\")"
     ]
   }
 }

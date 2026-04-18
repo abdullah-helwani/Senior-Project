@@ -12,6 +12,19 @@ import Classes from './pages/Classes';
 import Subjects from './pages/Subjects';
 import Schedules from './pages/Schedules';
 import Assessments from './pages/Assessments';
+import Attendance from './pages/Attendance';
+import BehaviorLogs from './pages/BehaviorLogs';
+import Complaints from './pages/Complaints';
+import Notifications from './pages/Notifications';
+import VacationRequests from './pages/VacationRequests';
+import FeePlans from './pages/FeePlans';
+import StudentFeePlans from './pages/StudentFeePlans';
+import Invoices from './pages/Invoices';
+import Payments from './pages/Payments';
+import SalaryPayments from './pages/SalaryPayments';
+import BusManagement from './pages/BusManagement';
+import Cameras from './pages/Cameras';
+import SurveillanceEvents from './pages/SurveillanceEvents';
 
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
@@ -38,6 +51,19 @@ function AppRoutes() {
         <Route path="/subjects" element={<Subjects />} />
         <Route path="/schedules" element={<Schedules />} />
         <Route path="/assessments" element={<Assessments />} />
+        <Route path="/attendance" element={<Attendance />} />
+        <Route path="/behavior-logs" element={<BehaviorLogs />} />
+        <Route path="/complaints" element={<Complaints />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/vacation-requests" element={<VacationRequests />} />
+        <Route path="/fee-plans" element={<FeePlans />} />
+        <Route path="/student-fee-plans" element={<StudentFeePlans />} />
+        <Route path="/invoices" element={<Invoices />} />
+        <Route path="/payments" element={<Payments />} />
+        <Route path="/salary-payments" element={<SalaryPayments />} />
+        <Route path="/bus-management" element={<BusManagement />} />
+        <Route path="/cameras" element={<Cameras />} />
+        <Route path="/surveillance-events" element={<SurveillanceEvents />} />
       </Route>
     </Routes>
   );
