@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter pub:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(python -c \"import json; f=open\\(r'C:\\\\Users\\\\ASUS\\\\Desktop\\\\sSmart_Multimedia_Messenger.ipynb','r',encoding='utf-8'\\); data=json.load\\(f\\); print\\('Valid JSON'\\); print\\('Cells:', len\\(data['cells']\\)\\); [print\\(f'Cell {i}: {c[\\\\\"cell_type\\\\\"]} - source type: {type\\(c[\\\\\"source\\\\\"]\\).__name__}'\\) for i,c in enumerate\\(data['cells']\\)]\")",
+      "Bash(python -c ':*)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Read(//c/Users/ASUS/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/24fcdd1c-9cdc-469c-a599-d0d3f8e60717/a0a4241f-786f-4d3e-a9bc-feaee48fa3db/skills/docx/**)",
+      "Bash(pandoc --track-changes=all \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\Frontend_Integration_Package \\(1\\).docx\" -o output.md)",
+      "Bash(python scripts/office/unpack.py \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\Frontend_Integration_Package \\(1\\).docx\" unpacked/)",
+      "Bash(pip install:*)",
+      "Bash(grep -v \"^$\")",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}
