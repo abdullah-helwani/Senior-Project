@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ConfigProvider, theme as antdTheme } from 'antd';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
@@ -25,6 +26,11 @@ import SalaryPayments from './pages/SalaryPayments';
 import BusManagement from './pages/BusManagement';
 import Cameras from './pages/Cameras';
 import SurveillanceEvents from './pages/SurveillanceEvents';
+import AnalyticsReports from './pages/AnalyticsReports';
+import Exports from './pages/Exports';
+import ReportCards from './pages/ReportCards';
+import AuditLogs from './pages/AuditLogs';
+import TeacherAvailability from './pages/TeacherAvailability';
 
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
@@ -64,6 +70,11 @@ function AppRoutes() {
         <Route path="/bus-management" element={<BusManagement />} />
         <Route path="/cameras" element={<Cameras />} />
         <Route path="/surveillance-events" element={<SurveillanceEvents />} />
+        <Route path="/analytics" element={<AnalyticsReports />} />
+        <Route path="/exports" element={<Exports />} />
+        <Route path="/report-cards" element={<ReportCards />} />
+        <Route path="/audit-logs" element={<AuditLogs />} />
+        <Route path="/teacher-availability" element={<TeacherAvailability />} />
       </Route>
     </Routes>
   );
@@ -71,10 +82,52 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+    <ConfigProvider
+      theme={{
+        algorithm: antdTheme.defaultAlgorithm,
+        token: {
+          colorPrimary: '#4f46e5',
+          colorInfo: '#4f46e5',
+          colorSuccess: '#16a34a',
+          colorWarning: '#f59e0b',
+          colorError: '#dc2626',
+          borderRadius: 8,
+          fontFamily:
+            "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+          fontSize: 14,
+          wireframe: false,
+        },
+        components: {
+          Layout: {
+            siderBg: '#0f172a',
+            headerBg: '#ffffff',
+            headerHeight: 64,
+            bodyBg: '#f5f7fb',
+          },
+          Menu: {
+            darkItemBg: '#0f172a',
+            darkSubMenuItemBg: '#0b1324',
+            darkItemSelectedBg: '#4f46e5',
+            darkItemHoverBg: 'rgba(255,255,255,0.06)',
+            itemHeight: 42,
+            itemBorderRadius: 6,
+          },
+          Card: {
+            borderRadiusLG: 12,
+            boxShadowTertiary:
+              '0 1px 2px 0 rgba(15,23,42,0.04), 0 1px 6px -1px rgba(15,23,42,0.02)',
+          },
+          Button: { controlHeight: 36, fontWeight: 500 },
+          Table: { headerBg: '#fafbfc', headerColor: '#475569', rowHoverBg: '#f5f7fb' },
+          Tag: { borderRadiusSM: 4 },
+        },
+      }}
+    >
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
+    </ConfigProvider>
   );
 }
