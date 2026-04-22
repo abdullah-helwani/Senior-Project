@@ -86,6 +86,7 @@ class InvoiceController extends Controller
         $invoice = Invoice::where('invoice_id', $id)
             ->with([
                 'account.student.user',
+                'account.student.guardians.user',
                 'account.feePlan',
                 'payments.guardian.user',
             ])

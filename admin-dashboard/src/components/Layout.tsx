@@ -60,6 +60,7 @@ const menuItems: MenuItem[] = [
       { key: '/users', icon: <UserOutlined />, label: 'Users' },
       { key: '/students', icon: <TeamOutlined />, label: 'Students' },
       { key: '/teachers', icon: <ProfileOutlined />, label: 'Teachers' },
+      { key: '/parents', icon: <TeamOutlined />, label: 'Parents' },
     ],
   },
 

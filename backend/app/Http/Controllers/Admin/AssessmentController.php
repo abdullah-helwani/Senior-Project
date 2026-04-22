@@ -36,7 +36,7 @@ class AssessmentController extends Controller
             'subject_id'         => 'required|exists:subjects,id',
             'section_id'         => 'required|exists:section,section_id',
             'title'              => 'required|string|max:255',
-            'createdbyteacherid' => 'required|exists:teachers,teacher_id',
+            'createdbyteacherid' => 'required|exists:teachers,id', // ← was teacher_id
             'assessmenttype'     => 'required|in:exam,quiz,assignment,project,other',
             'date'               => 'required|date',
             'maxscore'           => 'required|numeric|min:1',
@@ -124,10 +124,12 @@ class AssessmentController extends Controller
                 return [
                     'result_id'    => $r->result_id,
                     'student_id'   => $r->student_id,
-                    'student_name' => $r->student->user->name,
+                    'student_name' => $r->student?->user?->name ?? '—',
                     'score'        => $r->score,
                     'max_score'    => $assessment->maxscore,
-                    'percentage'   => round(($r->score / $assessment->maxscore) * 100, 1),
+                    'percentage'   => $assessment->maxscore > 0
+                        ? round(($r->score / $assessment->maxscore) * 100, 1)
+                        : 0,
                     'grade'        => $r->grade,
                     'published_at' => $r->publishedat,
                 ];
@@ -137,9 +139,9 @@ class AssessmentController extends Controller
             'assessment' => [
                 'id'             => $assessment->assessment_id,
                 'title'          => $assessment->title,
-                'subject'        => $assessment->subject->name,
-                'section'        => $assessment->section->name,
-                'class'          => $assessment->section->schoolClass->name,
+                'subject'        => $assessment->subject?->name ?? '—',
+                'section'        => $assessment->section?->name ?? '—',
+                'class'          => $assessment->section?->schoolClass?->name ?? '—',
                 'assessmenttype' => $assessment->assessmenttype,
                 'date'           => $assessment->date,
                 'maxscore'       => $assessment->maxscore,

@@ -9,7 +9,9 @@ class SchoolYear extends Model
     protected $table = 'schoolyear';
     protected $primaryKey = 'schoolyearid';
 
-    // Your schoolyear table only has schoolyearid and name
+    // schoolyear table only has schoolyearid and name — no created_at / updated_at
+    public $timestamps = false;
+
     protected $fillable = ['name'];
 
     public function classes()

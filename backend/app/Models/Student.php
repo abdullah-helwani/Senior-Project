@@ -45,4 +45,21 @@ class Student extends Model
     {
         return $this->hasMany(StudentFeePlan::class, 'student_id', 'id');
     }
+
+    public function guardianLinks()
+    {
+        return $this->hasMany(StudentGuardian::class, 'student_id', 'id');
+    }
+
+    public function guardians()
+    {
+        return $this->hasManyThrough(
+            Guardian::class,
+            StudentGuardian::class,
+            'student_id',   // FK on studentguardian pointing at students
+            'parent_id',    // PK on parent
+            'id',           // local key on students
+            'parent_id'     // FK on studentguardian pointing at parent
+        );
+    }
 }

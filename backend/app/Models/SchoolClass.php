@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-// Named SchoolClass because "Class" is a reserved word in PHP
 class SchoolClass extends Model
 {
     protected $table = 'class';
     protected $primaryKey = 'class_id';
+
+    public $timestamps = false;  
 
     protected $fillable = ['name', 'schoolyearid'];
 

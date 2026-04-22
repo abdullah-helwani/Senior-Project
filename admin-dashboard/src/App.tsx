@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Students from './pages/Students';
 import Teachers from './pages/Teachers';
+import Parents from './pages/Parents';
 import SchoolYears from './pages/SchoolYears';
 import Classes from './pages/Classes';
 import Subjects from './pages/Subjects';
@@ -52,6 +53,7 @@ function AppRoutes() {
         <Route path="/users" element={<Users />} />
         <Route path="/students" element={<Students />} />
         <Route path="/teachers" element={<Teachers />} />
+        <Route path="/parents" element={<Parents />} />
         <Route path="/school-years" element={<SchoolYears />} />
         <Route path="/classes" element={<Classes />} />
         <Route path="/subjects" element={<Subjects />} />

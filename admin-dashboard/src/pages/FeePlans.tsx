@@ -13,11 +13,11 @@ interface FeePlan {
   schoolyear_id: number;
   name: string;
   totalamount: string | number;
-  schoolYear?: { schoolyear_id: number; name: string };
+  schoolYear?: { schoolyearid: number; name: string };
   studentFeePlans?: { account_id: number; student?: { student_id: number; user?: { name: string } } }[];
 }
 
-interface SchoolYear { schoolyear_id: number; name: string }
+interface SchoolYear { schoolyearid: number; name: string }
 
 export default function FeePlans() {
   const [plans, setPlans] = useState<FeePlan[]>([]);
@@ -51,7 +51,8 @@ export default function FeePlans() {
   const fetchYears = async () => {
     try {
       const res = await api.get('/admin/school-years');
-      setSchoolYears(res.data);
+      const d = res.data.data || res.data;
+      setSchoolYears(Array.isArray(d) ? d : []);
     } catch { /* ignore */ }
   };
 
@@ -138,7 +139,7 @@ export default function FeePlans() {
       <Card style={{ marginBottom: 16 }}>
         <Select placeholder="School Year" style={{ width: 220 }} allowClear
           value={yearFilter} onChange={(v) => { setYearFilter(v); setPage(1); }}
-          options={schoolYears.map((y) => ({ value: y.schoolyear_id, label: y.name }))}
+          options={schoolYears.map((y) => ({ value: y.schoolyearid, label: y.name }))}
         />
       </Card>
 
@@ -157,7 +158,7 @@ export default function FeePlans() {
             <Input placeholder="e.g. Standard Tuition 2025-2026" />
           </Form.Item>
           <Form.Item name="schoolyear_id" label="School Year" rules={[{ required: true }]}>
-            <Select options={schoolYears.map((y) => ({ value: y.schoolyear_id, label: y.name }))} />
+            <Select options={schoolYears.map((y) => ({ value: y.schoolyearid, label: y.name }))} />
           </Form.Item>
           <Form.Item name="totalamount" label="Total Amount" rules={[{ required: true }]}>
             <InputNumber min={0} style={{ width: '100%' }} prefix="$" placeholder="e.g. 5000" />

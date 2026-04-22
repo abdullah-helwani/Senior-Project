@@ -8,6 +8,7 @@ class Section extends Model
 {
     protected $table = 'section';
     protected $primaryKey = 'section_id';
+    public $timestamps = false;
 
     // Your section table uses class_id, not school_class_id
     protected $fillable = ['class_id', 'name'];

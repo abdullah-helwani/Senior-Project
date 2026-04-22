@@ -149,13 +149,47 @@ class ParentController extends Controller
             'isprimary'    => 'sometimes|boolean',
         ]);
 
-        // Prevent duplicate link
+        // Prevent duplicate link between this exact parent + student
         $exists = StudentGuardian::where('parent_id', $id)
             ->where('student_id', $request->student_id)
             ->exists();
 
         if ($exists) {
             return response()->json(['message' => 'This child is already linked to this parent.'], 422);
+        }
+
+        // A student can only have one father and one mother
+        $uniqueRelationships = ['father', 'mother'];
+        $newRel = strtolower($request->relationship);
+        if (in_array($newRel, $uniqueRelationships, true)) {
+            $conflict = StudentGuardian::where('student_id', $request->student_id)
+                ->whereRaw('LOWER(relationship) = ?', [$newRel])
+                ->exists();
+
+            if ($conflict) {
+                return response()->json([
+                    'message' => "This student already has a {$request->relationship} linked. Unlink the existing one first.",
+                ], 422);
+            }
+
+            // A single parent account can't be a father to one student AND a mother to another
+            $oppositeRel = $newRel === 'father' ? 'mother' : 'father';
+            $hasOpposite = StudentGuardian::where('parent_id', $id)
+                ->whereRaw('LOWER(relationship) = ?', [$oppositeRel])
+                ->exists();
+
+            if ($hasOpposite) {
+                return response()->json([
+                    'message' => "This parent is already registered as a {$oppositeRel} to another student and cannot also be a {$newRel}.",
+                ], 422);
+            }
+        }
+
+        // Only one primary guardian allowed per student — demote existing primary if this one is primary
+        if ($request->boolean('isprimary', false)) {
+            StudentGuardian::where('student_id', $request->student_id)
+                ->where('isprimary', true)
+                ->update(['isprimary' => false]);
         }
 
         $link = StudentGuardian::create([
@@ -165,7 +199,7 @@ class ParentController extends Controller
             'isprimary'    => $request->boolean('isprimary', false),
         ]);
 
-        return response()->json($link, 201);
+        return response()->json($link->load('student.user'), 201);
     }
 
     /**

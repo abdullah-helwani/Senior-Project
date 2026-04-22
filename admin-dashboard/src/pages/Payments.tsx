@@ -70,29 +70,49 @@ export default function Payments() {
 
   const fetchOptions = async () => {
     try {
-      const [iRes, pRes] = await Promise.all([
+      const [unpaidRes, partialRes] = await Promise.all([
         api.get('/admin/invoices', { params: { per_page: 300, status: 'unpaid' } }),
-        api.get('/admin/users', { params: { per_page: 500, role: 'parent' } }),
+        api.get('/admin/invoices', { params: { per_page: 300, status: 'partial' } }),
       ]);
-      // Include partial also
-      const unpaid = iRes.data.data || iRes.data;
-      const partialRes = await api.get('/admin/invoices', { params: { per_page: 300, status: 'partial' } });
+      const unpaid  = unpaidRes.data.data  || unpaidRes.data;
       const partial = partialRes.data.data || partialRes.data;
-      setInvoices([...(Array.isArray(unpaid) ? unpaid : []), ...(Array.isArray(partial) ? partial : [])]);
-
-      // Map guardians from users list (assumes users endpoint returns users with role=parent)
-      const users = pRes.data.data || pRes.data;
-      setGuardians((Array.isArray(users) ? users : []).map((u: { id: number; name: string; parent?: { parent_id: number } }) => ({
-        parent_id: u.parent?.parent_id || u.id,
-        user: { name: u.name },
-      })));
+      setInvoices([
+        ...(Array.isArray(unpaid) ? unpaid : []),
+        ...(Array.isArray(partial) ? partial : []),
+      ]);
     } catch { /* ignore */ }
+  };
+
+  // When the chosen invoice changes, load the guardians of that student only.
+  const onInvoiceChange = async (invoiceId: number | undefined) => {
+    form.setFieldsValue({ parent_id: undefined });
+    setGuardians([]);
+    if (!invoiceId) return;
+    try {
+      const res = await api.get(`/admin/invoices/${invoiceId}`);
+      const linked: Guardian[] =
+        res.data?.invoice?.account?.student?.guardians?.map(
+          (g: { parent_id: number; user?: { name: string } }) => ({
+            parent_id: g.parent_id,
+            user: { name: g.user?.name ?? `#${g.parent_id}` },
+          }),
+        ) ?? [];
+      setGuardians(linked);
+      if (linked.length === 1) form.setFieldsValue({ parent_id: linked[0].parent_id });
+      if (linked.length === 0) message.warning('No parents linked to this student');
+    } catch {
+      message.error('Failed to load parents for this invoice');
+    }
   };
 
   useEffect(() => { fetchOptions(); }, []);
   useEffect(() => { fetchPayments(); }, [fetchPayments]);
 
-  const openRecord = () => { form.resetFields(); setModalOpen(true); };
+  const openRecord = () => {
+    form.resetFields();
+    setGuardians([]);
+    setModalOpen(true);
+  };
 
   const handleSubmit = async (values: Record<string, unknown>) => {
     setModalLoading(true);
@@ -195,15 +215,32 @@ export default function Payments() {
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item name="invoice_id" label="Invoice" rules={[{ required: true }]}>
             <Select showSearch optionFilterProp="label"
+              onChange={(v) => onInvoiceChange(v as number)}
               options={invoices.map((i) => ({
                 value: i.invoice_id,
                 label: `#${i.invoice_id} — ${i.account?.student?.user?.name || ''} — $${Number(i.totalamount).toFixed(2)} (${i.status})`,
               }))}
             />
           </Form.Item>
-          <Form.Item name="parent_id" label="Paying Parent" rules={[{ required: true }]}>
-            <Select showSearch optionFilterProp="label"
-              options={guardians.map((g) => ({ value: g.parent_id, label: g.user?.name || `#${g.parent_id}` }))}
+          <Form.Item
+            name="parent_id"
+            label="Paying Parent"
+            rules={[{ required: true, message: 'Select the paying parent' }]}
+            extra={
+              guardians.length === 0
+                ? 'Pick an invoice first — only that student’s linked parents will appear.'
+                : undefined
+            }
+          >
+            <Select
+              showSearch
+              optionFilterProp="label"
+              disabled={guardians.length === 0}
+              placeholder={guardians.length === 0 ? 'Select an invoice first' : 'Choose a parent'}
+              options={guardians.map((g) => ({
+                value: g.parent_id,
+                label: g.user?.name || `#${g.parent_id}`,
+              }))}
             />
           </Form.Item>
           <Row gutter={16}>

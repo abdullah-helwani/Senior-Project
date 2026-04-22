@@ -9,6 +9,21 @@ use Illuminate\Http\Request;
 class SalaryPaymentController extends Controller
 {
     /**
+     * Normalize input to "YYYY-MM".
+     * Accepts "YYYY-MM", "YYYY-MM-DD", or any date-parseable string.
+     */
+    private function toPeriodMonth(string $value): string
+    {
+        if (preg_match('/^\d{4}-\d{2}$/', $value)) {
+            return $value;
+        }
+
+        return substr((string) strtotime($value)
+            ? date('Y-m', strtotime($value))
+            : $value, 0, 7);
+    }
+
+    /**
      * GET /admin/salary-payments
      *
      * List salary payments. Filters: teacher_id, period_month (YYYY-MM), from, to
@@ -22,8 +37,8 @@ class SalaryPaymentController extends Controller
         }
 
         if ($request->filled('period_month')) {
-            // Accept "YYYY-MM" and match any day within that month
-            $query->whereRaw("to_char(periodmonth, 'YYYY-MM') = ?", [$request->period_month]);
+            // periodmonth is VARCHAR(7) stored as "YYYY-MM" — direct string match
+            $query->where('periodmonth', $this->toPeriodMonth($request->period_month));
         }
 
         if ($request->filled('from')) {
@@ -50,13 +65,15 @@ class SalaryPaymentController extends Controller
         $data = $request->validate([
             'teacher_id'   => 'required|exists:teachers,id',
             'amount'       => 'required|numeric|min:0',
-            'period_month' => 'required|date',
+            'period_month' => 'required|string',
             'paidat'       => 'nullable|date',
         ]);
 
+        $period = $this->toPeriodMonth($data['period_month']);
+
         // Prevent duplicate salary for the same teacher in the same period month
         $exists = SalaryPayment::where('teacher_id', $data['teacher_id'])
-            ->whereRaw("to_char(periodmonth, 'YYYY-MM') = to_char(?::date, 'YYYY-MM')", [$data['period_month']])
+            ->where('periodmonth', $period)
             ->exists();
 
         if ($exists) {
@@ -68,7 +85,7 @@ class SalaryPaymentController extends Controller
         $payment = SalaryPayment::create([
             'teacher_id'  => $data['teacher_id'],
             'amount'      => $data['amount'],
-            'periodmonth' => $data['period_month'],
+            'periodmonth' => $period,
             'paidat'      => $data['paidat'] ?? now(),
         ]);
 
@@ -96,12 +113,12 @@ class SalaryPaymentController extends Controller
 
         $data = $request->validate([
             'amount'       => 'sometimes|numeric|min:0',
-            'period_month' => 'sometimes|date',
+            'period_month' => 'sometimes|string',
             'paidat'       => 'sometimes|date',
         ]);
 
         if (array_key_exists('period_month', $data)) {
-            $data['periodmonth'] = $data['period_month'];
+            $data['periodmonth'] = $this->toPeriodMonth($data['period_month']);
             unset($data['period_month']);
         }
 

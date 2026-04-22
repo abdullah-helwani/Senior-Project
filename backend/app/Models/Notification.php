@@ -9,7 +9,9 @@ class Notification extends Model
     protected $table = 'notification';
     protected $primaryKey = 'notification_id';
 
-    // Your table has: notification_id, title, createdbyuserid, channel, created_at
+
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'title',
         'createdbyuserid',

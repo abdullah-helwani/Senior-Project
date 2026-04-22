@@ -8,6 +8,7 @@ class Assessment extends Model
 {
     protected $table = 'assessment';
     protected $primaryKey = 'assessment_id';
+    public $timestamps = false;
 
     protected $fillable = [
         'subject_id',

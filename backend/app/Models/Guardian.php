@@ -11,6 +11,9 @@ class Guardian extends Model
     protected $primaryKey = 'parent_id';
     public $timestamps = false;
 
+    // Keep relation keys as-is (e.g. studentLinks) instead of snake_casing to student_links
+    public static $snakeAttributes = false;
+
     protected $fillable = ['user_id'];
 
     public function user()
