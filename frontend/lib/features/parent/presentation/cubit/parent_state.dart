@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:first_try/features/parent/data/models/parent_extra_models.dart';
 import 'package:first_try/features/parent/data/models/parent_models.dart';
 
 // ── Selected child + all loaded data in one state ─────────────────────────────
@@ -21,6 +22,8 @@ class ParentLoaded extends ParentState {
   final Map<int, List<ParentHomeworkModel>> homework;
   final Map<int, List<ParentScheduleSlotModel>> schedule;
   final Map<int, ParentBusModel> bus;
+  // Timeline of recent bus stop events per child (optional — populated on demand).
+  final Map<int, List<BusEventModel>> busEvents;
 
   final List<ParentNotificationModel> notifications;
   final List<ParentNotificationModel> warnings;
@@ -37,6 +40,7 @@ class ParentLoaded extends ParentState {
     this.homework = const {},
     this.schedule = const {},
     this.bus = const {},
+    this.busEvents = const {},
     this.notifications = const [],
     this.warnings = const [],
     this.selectedDay = 'monday',
@@ -55,6 +59,7 @@ class ParentLoaded extends ParentState {
     Map<int, List<ParentHomeworkModel>>? homework,
     Map<int, List<ParentScheduleSlotModel>>? schedule,
     Map<int, ParentBusModel>? bus,
+    Map<int, List<BusEventModel>>? busEvents,
     List<ParentNotificationModel>? notifications,
     List<ParentNotificationModel>? warnings,
     String? selectedDay,
@@ -71,6 +76,7 @@ class ParentLoaded extends ParentState {
         homework: homework ?? this.homework,
         schedule: schedule ?? this.schedule,
         bus: bus ?? this.bus,
+        busEvents: busEvents ?? this.busEvents,
         notifications: notifications ?? this.notifications,
         warnings: warnings ?? this.warnings,
         selectedDay: selectedDay ?? this.selectedDay,
@@ -103,7 +109,7 @@ class ParentLoaded extends ParentState {
   @override
   List<Object?> get props => [
         profile, selectedChildIndex, marks, attendance,
-        homework, schedule, bus, notifications, warnings,
+        homework, schedule, bus, busEvents, notifications, warnings,
         selectedDay, marksSubjectFilter, homeworkStatusFilter,
       ];
 }

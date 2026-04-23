@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:first_try/core/api/api_interceptors.dart';
 import 'package:first_try/core/api/dio_consumer.dart';
 import 'package:first_try/core/router/route.dart';
 import 'package:first_try/core/services/storage_services.dart';
@@ -14,6 +15,11 @@ void main() async {
   final authCubit = AuthCubit(
     repo: AuthRepo(api: DioConsumer(dio: Dio())),
   );
+
+  // When any request returns 401 (expired/revoked token), the interceptor
+  // clears storage and calls this callback to force the cubit into the
+  // unauthenticated state — go_router will then redirect to /login.
+  ApiInterceptor.onUnauthorized = () => authCubit.forceLogout();
 
   runApp(
     BlocProvider.value(

@@ -1,18 +1,37 @@
 import 'package:dio/dio.dart';
 import 'package:first_try/core/services/storage_services.dart';
+import 'package:first_try/core/utils/app_url.dart';
 
 class ApiInterceptor extends Interceptor {
+  /// Called when a request returns 401 Unauthorized.
+  /// Wired up in main.dart to clear AuthCubit state so go_router redirects to login.
+  static void Function()? onUnauthorized;
+
   @override
   void onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await StorageService.getString('auth_token');
+    final token = await StorageService.getString(CacheKey.token);
     options.headers.putIfAbsent('Accept', () => 'application/json');
 
-    options.headers['authorization'] = 'Bearer $token';
-    // options.headers['authorization'] =
-    //     'Bearer 4|Ki6dpW0IrIRsj9tBnFihC9T51AE3aKqdaJA4xn3H6ddc5050';
+    if (token != null && token.isNotEmpty) {
+      options.headers['Authorization'] = 'Bearer $token';
+    }
     super.onRequest(options, handler);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    if (err.response?.statusCode == 401) {
+      // Don't auto-logout on a failed /login call — that's just wrong credentials.
+      final isLoginCall = err.requestOptions.path.endsWith('/login');
+      if (!isLoginCall) {
+        await StorageService.remove(CacheKey.token);
+        await StorageService.remove(CacheKey.user);
+        onUnauthorized?.call();
+      }
+    }
+    super.onError(err, handler);
   }
 }

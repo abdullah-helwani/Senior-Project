@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:first_try/core/api/dio_consumer.dart';
-import 'package:first_try/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:first_try/features/auth/presentation/cubit/auth_state.dart';
+import 'package:first_try/features/auth/current_user.dart';
 import 'package:first_try/features/parent/data/repos/parent_repo.dart';
 import 'package:first_try/features/parent/presentation/cubit/parent_cubit.dart';
 import 'package:first_try/features/parent/presentation/cubit/parent_state.dart';
@@ -27,8 +26,7 @@ class _ParentShellScreenState extends State<ParentShellScreen> {
   @override
   void initState() {
     super.initState();
-    final auth = context.read<AuthCubit>().state;
-    final parentId = auth is AuthAuthenticated ? auth.user.id : 0;
+    final parentId = context.currentUserId;
     _cubit = ParentCubit(
       repo: ParentRepo(api: DioConsumer(dio: Dio()), parentId: parentId),
     )..load();

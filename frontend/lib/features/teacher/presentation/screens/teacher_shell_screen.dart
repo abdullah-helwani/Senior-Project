@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:first_try/core/api/dio_consumer.dart';
-import 'package:first_try/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:first_try/features/auth/presentation/cubit/auth_state.dart';
+import 'package:first_try/features/auth/current_user.dart';
 import 'package:first_try/features/teacher/data/repos/teacher_repo.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_attendance_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_classes_cubit.dart';
@@ -40,8 +39,7 @@ class _TeacherShellScreenState extends State<TeacherShellScreen> {
   @override
   void initState() {
     super.initState();
-    final auth = context.read<AuthCubit>().state;
-    final teacherId = auth is AuthAuthenticated ? auth.user.id : 0;
+    final teacherId = context.currentUserId;
 
     _repo = TeacherRepo(api: DioConsumer(dio: Dio()), teacherId: teacherId);
     _dashboardCubit     = TeacherDashboardCubit(repo: _repo)..load();

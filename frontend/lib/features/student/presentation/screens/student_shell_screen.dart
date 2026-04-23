@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:first_try/core/api/dio_consumer.dart';
-import 'package:first_try/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:first_try/features/auth/presentation/cubit/auth_state.dart';
+import 'package:first_try/features/auth/current_user.dart';
 import 'package:first_try/features/student/data/repos/student_repo.dart';
 import 'package:first_try/features/student/presentation/cubit/attendance_cubit.dart';
 import 'package:first_try/features/student/presentation/cubit/bus_cubit.dart';
@@ -42,9 +41,7 @@ class _StudentShellScreenState extends State<StudentShellScreen> {
   @override
   void initState() {
     super.initState();
-    final authState = context.read<AuthCubit>().state;
-    final studentId =
-        authState is AuthAuthenticated ? authState.user.id : 0;
+    final studentId = context.currentUserId;
 
     _repo = StudentRepo(api: DioConsumer(dio: Dio()), studentId: studentId);
 

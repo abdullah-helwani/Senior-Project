@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:first_try/core/api/dio_consumer.dart';
-import 'package:first_try/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:first_try/features/auth/presentation/cubit/auth_state.dart';
+import 'package:first_try/features/auth/current_user.dart';
 import 'package:first_try/features/driver/data/repos/driver_repo.dart';
 import 'package:first_try/features/driver/presentation/cubit/driver_profile_cubit.dart';
 import 'package:first_try/features/driver/presentation/cubit/today_trips_cubit.dart';
@@ -30,9 +29,7 @@ class _DriverShellScreenState extends State<DriverShellScreen> {
   @override
   void initState() {
     super.initState();
-    final authState = context.read<AuthCubit>().state;
-    final driverId =
-        authState is AuthAuthenticated ? authState.user.id : 0;
+    final driverId = context.currentUserId;
 
     _repo = DriverRepo(api: DioConsumer(dio: Dio()));
     _todayCubit   = TodayTripsCubit(repo: _repo, driverId: driverId)..loadTodayTrips();

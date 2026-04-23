@@ -64,9 +64,11 @@ class AppUrl {
   // Teacher notifications are not exposed — use the admin notification system.
   static String teacherProfile(int id)     => '$_api/teacher/$id/profile';
   static String teacherSchedule(int id)    => '$_api/teacher/$id/schedule';
+  // Homework CRUD — GET list / POST new / GET one / PUT update / DELETE
   static String teacherHomework(int id)    => '$_api/teacher/$id/homework';
   static String teacherHomeworkItem(int id, int hwId) =>
       '$_api/teacher/$id/homework/$hwId';
+  // Returns { homework, summary, submissions: [...] }
   static String teacherHomeworkSubmissions(int id, int hwId) =>
       '$_api/teacher/$id/homework/$hwId/submissions';
   // PUT — body: { score }  (field name is "score", NOT "grade")
@@ -77,11 +79,36 @@ class AppUrl {
   static String teacherAttendance(int id)  => '$_api/teacher/$id/attendance';
   static String teacherAssessmentCalendar(int id) =>
       '$_api/teacher/$id/assessment-calendar';
+  // Messages — sent list / inbox / send / show
+  static String teacherMessages(int id)      => '$_api/teacher/$id/messages';
+  static String teacherMessagesInbox(int id) => '$_api/teacher/$id/messages/inbox';
+  static String teacherMessage(int id, int msgId) =>
+      '$_api/teacher/$id/messages/$msgId';
+  // Performance report — requires ?section_id ; optional ?subject_id ?week_of
+  static String teacherPerformanceReport(int id) =>
+      '$_api/teacher/$id/performance-report';
+  // Behavior logs — list / create / show
   static String teacherBehaviorLogs(int id) =>
       '$_api/teacher/$id/behavior-logs';
+  static String teacherBehaviorLog(int id, int logId) =>
+      '$_api/teacher/$id/behavior-logs/$logId';
+  // Salary
+  static String teacherSalary(int id)              => '$_api/teacher/$id/salary';
+  static String teacherSalaryItem(int id, int salId) =>
+      '$_api/teacher/$id/salary/$salId';
+  // Vacation requests
+  static String teacherVacationRequests(int id) =>
+      '$_api/teacher/$id/vacation-requests';
+  static String teacherVacationRequest(int id, int reqId) =>
+      '$_api/teacher/$id/vacation-requests/$reqId';
+  // Availability — GET/POST on list ; PUT/DELETE on item
+  static String teacherAvailability(int id)      => '$_api/teacher/$id/availability';
+  static String teacherAvailabilityItem(int id, int slotId) =>
+      '$_api/teacher/$id/availability/$slotId';
 
   // ── Parent ──────────────────────────────────────────────────────────────────
   static String parentProfile(int id)     => '$_api/parent/$id/profile';
+  // Richer per-child info than what profile.children carries (enrollment, relationship, ...)
   static String parentChildren(int id)    => '$_api/parent/$id/children';
   static String parentChildMarks(int id, int childId) =>
       '$_api/parent/$id/children/$childId/marks';
@@ -111,10 +138,21 @@ class AppUrl {
   static String parentMarkNoteRead(int id, int recipientId) =>
       '$_api/parent/$id/notes/$recipientId/read';                    // PUT
   static String parentMessages(int id)    => '$_api/parent/$id/messages';
+  static String parentMessage(int id, int messageId) =>
+      '$_api/parent/$id/messages/$messageId';
   static String parentComplaints(int id)  => '$_api/parent/$id/complaints';
+  static String parentComplaint(int id, int complaintId) =>
+      '$_api/parent/$id/complaints/$complaintId';
   static String parentInvoices(int id)    => '$_api/parent/$id/invoices';
+  static String parentInvoice(int id, int invoiceId) =>
+      '$_api/parent/$id/invoices/$invoiceId';
   static String parentPayments(int id)    => '$_api/parent/$id/payments';
+  static String parentPayment(int id, int paymentId) =>
+      '$_api/parent/$id/payments/$paymentId';
+  // Stripe
   static String parentCheckout(int id)    => '$_api/parent/$id/payments/checkout';
+  static String parentCheckoutStatus(int id, String sessionId) =>
+      '$_api/parent/$id/payments/checkout/$sessionId/status';
 }
 
 // ─── Local-storage keys ───────────────────────────────────────────────────────

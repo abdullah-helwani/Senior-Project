@@ -36,8 +36,24 @@ class AppRouter {
         }
 
         if (authState is AuthAuthenticated) {
-          final home = '/${authState.user.roleType}';
+          final role = authState.user.roleType;
+          // Admin has no mobile shell — send them back to login and sign them out.
+          // (Admin uses the web dashboard in admin-dashboard/.)
+          const mobileRoles = {'student', 'teacher', 'parent', 'driver'};
+          if (!mobileRoles.contains(role)) {
+            authCubit.forceLogout();
+            return '/login';
+          }
+          final home = '/$role';
           if (location == '/splash' || location == '/login') return home;
+
+          // Cross-role guard: a student cannot visit /teacher, etc.
+          // Send them to their own home if they try.
+          for (final otherRole in mobileRoles) {
+            if (otherRole != role && location.startsWith('/$otherRole')) {
+              return home;
+            }
+          }
         }
 
         return null;

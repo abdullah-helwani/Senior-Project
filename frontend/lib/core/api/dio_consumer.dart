@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:first_try/core/api/api_consumer.dart';
 import 'package:first_try/core/api/api_interceptors.dart';
+import 'package:first_try/core/api/retry_interceptor.dart';
 import 'package:first_try/core/errors/handle_dio_excpetion.dart';
 import 'package:first_try/core/utils/app_url.dart';
 
@@ -14,6 +15,7 @@ class DioConsumer extends ApiConsumer {
     dio.options.receiveTimeout = const Duration(seconds: 10);
     dio.options.headers['Accept'] = 'application/json';
     dio.interceptors.add(ApiInterceptor());
+    dio.interceptors.add(RetryInterceptor(dio: dio));
     dio.interceptors.add(
       LogInterceptor(
         request: true,

@@ -15,23 +15,41 @@ class AuthCubit extends Cubit<AuthState> {
         super(const AuthInitial());
 
   /// Called once at app startup to restore a previous session.
+  /// Steps: read token + user from storage → optimistically emit authenticated →
+  /// validate with /me in the background → update user or force-logout on failure.
   Future<void> hydrate() async {
     emit(const AuthLoading());
     final token    = await StorageService.getString(CacheKey.token);
     final userJson = await StorageService.getString(CacheKey.user);
 
-    if (token != null && userJson != null) {
-      try {
-        final user = UserModel.fromJson(
-          jsonDecode(userJson) as Map<String, dynamic>,
-        );
-        emit(AuthAuthenticated(token: token, user: user));
-      } catch (_) {
-        await StorageService.clearAll();
-        emit(const AuthUnauthenticated());
-      }
-    } else {
+    if (token == null || userJson == null) {
       emit(const AuthUnauthenticated());
+      return;
+    }
+
+    // Optimistic restore so the splash unblocks immediately.
+    try {
+      final cachedUser = UserModel.fromJson(
+        jsonDecode(userJson) as Map<String, dynamic>,
+      );
+      emit(AuthAuthenticated(token: token, user: cachedUser));
+    } catch (_) {
+      await StorageService.clearAll();
+      emit(const AuthUnauthenticated());
+      return;
+    }
+
+    // Validate + refresh with /me (fire-and-forget). If the token is revoked
+    // or expired, the 401 interceptor will call forceLogout() for us.
+    try {
+      final freshUser = await _repo.me();
+      await StorageService.saveString(
+        CacheKey.user,
+        jsonEncode(freshUser.toJson()),
+      );
+      emit(AuthAuthenticated(token: token, user: freshUser));
+    } catch (_) {
+      // Non-401 errors (offline, 500, etc.) — keep the cached session as-is.
     }
   }
 
@@ -49,7 +67,7 @@ class AuthCubit extends Cubit<AuthState> {
       );
       emit(AuthAuthenticated(token: response.token, user: response.user));
     } catch (_) {
-      // ── Mock login (remove when backend is ready) ──────────────────────────
+      // ── Mock login (used for UI testing when the backend is offline) ───────
       final mockRole = _mockRoleFromEmail(email);
       if (mockRole != null) {
         const mockToken = 'mock-token';
@@ -64,18 +82,15 @@ class AuthCubit extends Cubit<AuthState> {
         emit(AuthAuthenticated(token: mockToken, user: mockUser));
         return;
       }
-      // ── End mock ───────────────────────────────────────────────────────────
-      emit(const AuthError(message: 'Login failed — backend not reachable'));
+      emit(const AuthError(message: 'Login failed — check your credentials or your connection'));
     }
   }
 
   String? _mockRoleFromEmail(String email) {
     final e = email.toLowerCase().trim();
-    // Real seeded emails
     if (e == 'ali@school.test' || e == 'fatima@school.test') return 'student';
     if (e == 'sara@school.test' || e == 'omar@school.test')  return 'teacher';
     if (e == 'parent@school.test')                           return 'parent';
-    // Generic demo emails (quick-access buttons)
     if (e.contains('student')) return 'student';
     if (e.contains('driver'))  return 'driver';
     if (e.contains('teacher')) return 'teacher';
@@ -105,8 +120,15 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       await _repo.logout();
     } catch (_) {
-      // Clear local session regardless of API result
+      // Ignore errors — we're clearing local session regardless.
     }
+    await StorageService.clearAll();
+    emit(const AuthUnauthenticated());
+  }
+
+  /// Called by the 401 interceptor when the server rejects our token.
+  /// Skips the API call (token is already invalid) and just clears local state.
+  Future<void> forceLogout() async {
     await StorageService.clearAll();
     emit(const AuthUnauthenticated());
   }

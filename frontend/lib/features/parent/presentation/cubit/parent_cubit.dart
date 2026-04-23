@@ -126,6 +126,43 @@ class ParentCubit extends Cubit<ParentState> {
     }
   }
 
+  // ── Bus tracking (on-demand, called by the bus screen) ────────────────────
+
+  /// Refreshes the live location for the currently-selected child. Safe to
+  /// call on a timer from the bus screen.
+  Future<void> refreshBusLive() async {
+    final s = state;
+    if (s is! ParentLoaded) return;
+    final childId = s.selectedChildId;
+    try {
+      final live = await repo.getChildBusLiveLocation(childId);
+      final current = state;
+      if (current is! ParentLoaded) return;
+      emit(current.copyWith(
+        bus: Map.from(current.bus)..[childId] = live,
+      ));
+    } catch (_) {
+      // Silent — bus service may be offline; next tick will retry.
+    }
+  }
+
+  /// Fetches the recent stop-event timeline for the currently-selected child.
+  Future<void> loadBusEvents() async {
+    final s = state;
+    if (s is! ParentLoaded) return;
+    final childId = s.selectedChildId;
+    try {
+      final events = await repo.getChildBusEvents(childId);
+      final current = state;
+      if (current is! ParentLoaded) return;
+      emit(current.copyWith(
+        busEvents: Map.from(current.busEvents)..[childId] = events,
+      ));
+    } catch (_) {
+      // Non-fatal.
+    }
+  }
+
   Future<void> markRead(int id, {bool isWarning = false}) async {
     final s = state;
     if (s is! ParentLoaded) return;
