@@ -1,6 +1,7 @@
 import 'package:first_try/core/widgets/shared/empty_state.dart';
 import 'package:first_try/core/widgets/shared/error_view.dart';
 import 'package:first_try/core/widgets/shared/loading_view.dart';
+import 'package:first_try/core/widgets/shared/skeletons.dart';
 import 'package:first_try/features/driver/data/models/driver_models.dart';
 import 'package:first_try/features/driver/presentation/cubit/today_trips_cubit.dart';
 import 'package:first_try/features/driver/presentation/cubit/today_trips_state.dart';
@@ -49,7 +50,7 @@ class TodayTripsScreen extends StatelessWidget {
               child: BlocBuilder<TodayTripsCubit, TodayTripsState>(
                 builder: (context, state) {
                   if (state is TodayTripsLoading || state is TodayTripsInitial) {
-                    return const LoadingView();
+                    return const CardListSkeleton();
                   }
                   if (state is TodayTripsError) {
                     return ErrorView(

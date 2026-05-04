@@ -3,7 +3,16 @@
     "allow": [
       "Bash(flutter pub:*)",
       "Bash(flutter analyze:*)",
-      "Bash(flutter test *)"
+      "Bash(flutter test *)",
+      "Bash(xargs ls *)",
+      "Bash(cat android/settings.gradle.kts)",
+      "Bash(cat android/gradle.properties)",
+      "Bash(cat android/gradle/wrapper/gradle-wrapper.properties)",
+      "Read(//c/c/Users/ASUS/Desktop/Senior-Project/frontend/**)",
+      "Read(//c/c/Users/ASUS/Desktop/Senior-Project/frontend/android/**)",
+      "Read(//c/c/Users/ASUS/Desktop/Senior-Project/frontend/android/app/**)",
+      "Bash(dart analyze *)",
+      "Bash(xargs grep *)"
     ]
   }
 }

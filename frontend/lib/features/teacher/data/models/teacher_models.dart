@@ -134,16 +134,27 @@ class TeacherClassModel extends Equatable {
     required this.students,
   });
 
-  factory TeacherClassModel.fromJson(Map<String, dynamic> json) =>
-      TeacherClassModel(
-        id: json['id'] as int,
-        name: json['name'] as String,
-        subject: json['subject'] as String,
-        students: (json['students'] as List<dynamic>? ?? [])
-            .map((s) =>
-                ClassStudentModel.fromJson(s as Map<String, dynamic>))
-            .toList(),
-      );
+  factory TeacherClassModel.fromJson(Map<String, dynamic> json) {
+    // Backend's `/teacher/{id}/profile` returns assignments as
+    // `{ subject: <name>, section: <name>, class: <name>, school_year: <name> }`
+    // — none of the fields are typed `int` and `students` is absent. Map
+    // tolerantly so a stale row (subject deleted, etc.) doesn't crash parsing.
+    final subjectField = json['subject'];
+    final sectionField = json['section'];
+    final classField = json['class'];
+    return TeacherClassModel(
+      id: (json['id'] as int?) ?? 0,
+      name: (json['name'] as String?) ??
+          (sectionField is String ? sectionField : null) ??
+          (classField is String ? classField : null) ??
+          'Class',
+      subject: (subjectField is String ? subjectField : null) ?? '',
+      students: (json['students'] as List<dynamic>? ?? [])
+          .map((s) =>
+              ClassStudentModel.fromJson(s as Map<String, dynamic>))
+          .toList(),
+    );
+  }
 
   @override
   List<Object> get props => [id, name, subject, students];

@@ -1,4 +1,3 @@
-import 'package:first_try/features/teacher/data/mocks/teacher_mock_data.dart';
 import 'package:first_try/features/teacher/data/repos/teacher_repo.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_attendance_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,8 +10,8 @@ class TeacherAttendanceCubit extends Cubit<TeacherAttendanceState> {
     emit(TeacherAttendanceLoading());
     try {
       emit(TeacherAttendanceLoaded(await repo.getAttendanceSessions()));
-    } catch (_) {
-      emit(TeacherAttendanceLoaded(TeacherMockData.attendanceSessions));
+    } catch (e) {
+      emit(TeacherAttendanceError(e.toString()));
     }
   }
 

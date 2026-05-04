@@ -1,5 +1,8 @@
+import 'package:first_try/core/theme/theme.dart';
 import 'package:first_try/core/widgets/shared/error_view.dart';
 import 'package:first_try/core/widgets/shared/loading_view.dart';
+import 'package:first_try/core/widgets/shared/skeletons.dart';
+import 'package:first_try/core/widgets/ui/ui.dart';
 import 'package:first_try/features/student/data/models/student_models.dart';
 import 'package:first_try/features/student/presentation/cubit/bus_cubit.dart';
 import 'package:first_try/features/student/presentation/cubit/bus_state.dart';
@@ -48,7 +51,7 @@ class _StudentBusScreenState extends State<StudentBusScreen>
       body: BlocBuilder<BusCubit, BusState>(
         builder: (context, state) {
           if (state is BusLoading || state is BusInitial) {
-            return const LoadingView();
+            return const CardListSkeleton();
           }
           if (state is BusError) {
             return ErrorView(
@@ -82,67 +85,61 @@ class _AssignmentTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final palette = context.palette;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // Bus info card
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [cs.primary, cs.primary.withValues(alpha: 0.75)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
-          ),
+        // Bus info hero card
+        AppCard.glass(
+          gradient: palette.brandGradient,
+          opacity: 0.92,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Icon(Icons.directions_bus_rounded,
-                      color: cs.onPrimary, size: 28),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          assignment.busPlate,
-                          style: TextStyle(
-                              color: cs.onPrimary,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800),
-                        ),
-                        Text(
-                          assignment.routeName,
-                          style: TextStyle(
-                              color: cs.onPrimary
-                                  .withValues(alpha: 0.85),
-                              fontSize: 13),
-                        ),
-                      ],
-                    ),
+              Row(children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.22),
+                    borderRadius: Radii.smRadius,
                   ),
-                ],
-              ),
+                  child: const Icon(Icons.directions_bus_rounded,
+                      color: Colors.white, size: 26),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        assignment.busPlate,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800),
+                      ),
+                      Text(
+                        assignment.routeName,
+                        style: const TextStyle(
+                            color: Colors.white70, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              ]),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Icon(Icons.location_on_rounded,
-                      color: cs.onPrimary.withValues(alpha: 0.8),
-                      size: 16),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Your stop: ${assignment.pickupStopName}',
-                    style: TextStyle(
-                        color: cs.onPrimary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13),
-                  ),
-                ],
-              ),
+              Row(children: [
+                const Icon(Icons.location_on_rounded,
+                    color: Colors.white70, size: 16),
+                const SizedBox(width: 6),
+                Text(
+                  'Your stop: ${assignment.pickupStopName}',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13),
+                ),
+              ]),
             ],
           ),
         ),
@@ -171,11 +168,8 @@ class _AssignmentTab extends StatelessWidget {
                       height: 28,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: isMyStop
-                            ? cs.primary
-                            : cs.primaryContainer,
-                        border: Border.all(
-                            color: cs.primary, width: 2),
+                        color: isMyStop ? cs.primary : cs.primaryContainer,
+                        border: Border.all(color: cs.primary, width: 2),
                       ),
                       child: Center(
                         child: Text(
@@ -202,41 +196,33 @@ class _AssignmentTab extends StatelessWidget {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      Text(
-                        stop.name,
-                        style: TextStyle(
-                          fontWeight: isMyStop
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          fontSize: 14,
-                          color: isMyStop
-                              ? cs.primary
-                              : cs.onSurface,
-                        ),
+                  child: Row(children: [
+                    Text(
+                      stop.name,
+                      style: TextStyle(
+                        fontWeight:
+                            isMyStop ? FontWeight.w700 : FontWeight.w500,
+                        fontSize: 14,
+                        color: isMyStop ? cs.primary : cs.onSurface,
                       ),
-                      if (isMyStop) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: cs.primary
-                                .withValues(alpha: 0.12),
-                            borderRadius:
-                                BorderRadius.circular(12),
-                          ),
-                          child: Text('Your stop',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  color: cs.primary,
-                                  fontWeight:
-                                      FontWeight.w600)),
+                    ),
+                    if (isMyStop) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: cs.primary.withValues(alpha: 0.12),
+                          borderRadius: Radii.pillRadius,
                         ),
-                      ],
+                        child: Text('Your stop',
+                            style: TextStyle(
+                                fontSize: 11,
+                                color: cs.primary,
+                                fontWeight: FontWeight.w600)),
+                      ),
                     ],
-                  ),
+                  ]),
                 ),
               ),
             ],
@@ -270,10 +256,10 @@ class _LiveTab extends StatelessWidget {
             Text('Bus location not available',
                 style: TextStyle(
                     fontSize: 16, color: cs.onSurfaceVariant)),
-            const SizedBox(height: 8),
-            FilledButton.icon(
-              icon: const Icon(Icons.refresh_rounded, size: 16),
-              label: const Text('Refresh'),
+            const SizedBox(height: 16),
+            AppButton.primary(
+              label: 'Refresh',
+              icon: Icons.refresh_rounded,
               onPressed: () =>
                   context.read<BusCubit>().refreshLive(),
             ),
@@ -288,83 +274,72 @@ class _LiveTab extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Map placeholder (real map would use flutter_map / google_maps)
-          Container(
-            height: 220,
-            decoration: BoxDecoration(
-              color: cs.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: cs.outlineVariant),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.map_rounded,
-                    size: 48, color: cs.onSurfaceVariant),
-                const SizedBox(height: 8),
-                Text('Map view — integrate flutter_map',
-                    style: TextStyle(
-                        color: cs.onSurfaceVariant, fontSize: 13)),
-                const SizedBox(height: 4),
-                Text(
-                  '${loc.latitude!.toStringAsFixed(4)}, ${loc.longitude!.toStringAsFixed(4)}',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: cs.primary),
+          // Map placeholder
+          AppCard.surface(
+            padding: EdgeInsets.zero,
+            child: ClipRRect(
+              borderRadius: Radii.mdRadius,
+              child: SizedBox(
+                height: 220,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.map_rounded,
+                        size: 48, color: cs.onSurfaceVariant),
+                    const SizedBox(height: 8),
+                    Text('Map view — integrate flutter_map',
+                        style: TextStyle(
+                            color: cs.onSurfaceVariant, fontSize: 13)),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${loc.latitude!.toStringAsFixed(4)}, ${loc.longitude!.toStringAsFixed(4)}',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700, color: cs.primary),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
           const SizedBox(height: 16),
           // Info card
-          Container(
+          AppCard.surface(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: cs.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: cs.outlineVariant),
-            ),
-            child: Column(
-              children: [
-                _InfoRow(
-                    icon: Icons.person_rounded,
-                    label: 'Driver',
-                    value: loc.driverName ?? 'Unknown'),
-                const Divider(height: 20),
-                _InfoRow(
-                    icon: Icons.route_rounded,
-                    label: 'Route',
-                    value: loc.routeName ?? 'Unknown'),
-                const Divider(height: 20),
-                _InfoRow(
-                    icon: Icons.access_time_rounded,
-                    label: 'Last updated',
-                    value: loc.updatedAt != null
-                        ? _fmtTime(loc.updatedAt!)
-                        : 'Unknown'),
-              ],
-            ),
+            child: Column(children: [
+              _InfoRow(
+                  icon: Icons.person_rounded,
+                  label: 'Driver',
+                  value: loc.driverName ?? 'Unknown'),
+              const Divider(height: 20),
+              _InfoRow(
+                  icon: Icons.route_rounded,
+                  label: 'Route',
+                  value: loc.routeName ?? 'Unknown'),
+              const Divider(height: 20),
+              _InfoRow(
+                  icon: Icons.access_time_rounded,
+                  label: 'Last updated',
+                  value: loc.updatedAt != null
+                      ? _fmtTime(loc.updatedAt!)
+                      : 'Unknown'),
+            ]),
           ),
           const SizedBox(height: 16),
-          Container(
+          // Live tracking banner
+          AppCard.filled(
+            color: const Color(0xFFD1FAE5),
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.gps_fixed_rounded,
-                    color: Colors.green.shade700, size: 18),
-                const SizedBox(width: 8),
-                Text(
-                  'Live tracking active',
-                  style: TextStyle(
-                      color: Colors.green.shade700,
-                      fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
+            child: Row(children: [
+              const Icon(Icons.gps_fixed_rounded,
+                  color: Color(0xFF059669), size: 18),
+              const SizedBox(width: 8),
+              const Text(
+                'Live tracking active',
+                style: TextStyle(
+                    color: Color(0xFF059669),
+                    fontWeight: FontWeight.w600),
+              ),
+            ]),
           ),
         ],
       ),
@@ -386,26 +361,21 @@ class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
   const _InfoRow(
-      {required this.icon,
-      required this.label,
-      required this.value});
+      {required this.icon, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: cs.primary),
-        const SizedBox(width: 10),
-        Text(label,
-            style: TextStyle(
-                fontSize: 13, color: cs.onSurfaceVariant)),
-        const Spacer(),
-        Text(value,
-            style: const TextStyle(
-                fontWeight: FontWeight.w600, fontSize: 13)),
-      ],
-    );
+    return Row(children: [
+      Icon(icon, size: 18, color: cs.primary),
+      const SizedBox(width: 10),
+      Text(label,
+          style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+      const Spacer(),
+      Text(value,
+          style: const TextStyle(
+              fontWeight: FontWeight.w600, fontSize: 13)),
+    ]);
   }
 }
 
@@ -424,8 +394,7 @@ class _HistoryTab extends StatelessWidget {
     if (events.isEmpty) {
       return Center(
         child: Text('No bus events yet.',
-            style:
-                TextStyle(color: cs.onSurfaceVariant)),
+            style: TextStyle(color: cs.onSurfaceVariant)),
       );
     }
 
@@ -451,7 +420,10 @@ class _HistoryTab extends StatelessWidget {
                   color: cs.onSurfaceVariant),
             ),
           ),
-          ...grouped[date]!.map((e) => _EventTile(event: e)),
+          ...grouped[date]!.map((e) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _EventTile(event: e),
+              )),
           const SizedBox(height: 8),
         ],
       ],
@@ -460,8 +432,7 @@ class _HistoryTab extends StatelessWidget {
 
   String _fmtDate(String iso) {
     try {
-      return DateFormat('EEEE, d MMMM y')
-          .format(DateTime.parse(iso));
+      return DateFormat('EEEE, d MMMM y').format(DateTime.parse(iso));
     } catch (_) {
       return iso;
     }
@@ -474,59 +445,49 @@ class _EventTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final isBoarded = event.eventType == 'boarded';
     final color =
-        isBoarded ? Colors.green.shade600 : Colors.blue.shade600;
-    final icon = isBoarded
-        ? Icons.login_rounded
-        : Icons.logout_rounded;
+        isBoarded ? const Color(0xFF10B981) : const Color(0xFF3B82F6);
+    final icon =
+        isBoarded ? Icons.login_rounded : Icons.logout_rounded;
     final label = isBoarded ? 'Boarded' : 'Dropped off';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.outlineVariant),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 18),
+    return AppCard.surface(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label,
-                    style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                        color: color)),
-                Text(event.stopName,
-                    style: TextStyle(
-                        fontSize: 12,
-                        color: cs.onSurfaceVariant)),
-              ],
-            ),
+          child: Icon(icon, color: color, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      color: color)),
+              Text(event.stopName,
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurfaceVariant)),
+            ],
           ),
-          Text(
-            event.time,
-            style: const TextStyle(
-                fontWeight: FontWeight.w700, fontSize: 14),
-          ),
-        ],
-      ),
+        ),
+        Text(
+          event.time,
+          style: const TextStyle(
+              fontWeight: FontWeight.w700, fontSize: 14),
+        ),
+      ]),
     );
   }
 }

@@ -2,11 +2,12 @@
 // Start backend with: php artisan serve   (binds to 127.0.0.1:8000)
 //
 // Then pick the right value below for your device:
+//   Chrome / web      →  'http://localhost:8000'  (or 'http://127.0.0.1:8000')
 //   Android emulator  →  'http://10.0.2.2:8000'
 //   iOS simulator     →  'http://127.0.0.1:8000'
 //   Physical device   →  'http://192.168.x.x:8000'  ← run `ipconfig` to find your PC's LAN IP
 //                         (both PC and phone must be on the same Wi-Fi)
-const String baseUrl = 'http://10.0.2.2:8000';   // ← change this to match your setup
+const String baseUrl = 'http://localhost:8000';   // ← change this to match your setup
 
 const String _api = '$baseUrl/api';
 

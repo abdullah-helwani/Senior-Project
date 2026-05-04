@@ -1,4 +1,5 @@
 import 'package:first_try/core/api/api_consumer.dart';
+import 'package:first_try/core/models/assessment_event_model.dart';
 import 'package:first_try/core/utils/app_url.dart';
 import 'package:first_try/features/teacher/data/models/teacher_extra_models.dart';
 import 'package:first_try/features/teacher/data/models/teacher_models.dart';
@@ -395,9 +396,9 @@ class TeacherRepo {
 
   // ── Assessment calendar ────────────────────────────────────────────────────
 
-  Future<List<Map<String, dynamic>>> getAssessmentCalendar() async {
+  Future<List<AssessmentEventModel>> getAssessmentCalendar() async {
     final res = await api.getApi(AppUrl.teacherAssessmentCalendar(teacherId));
-    return _toList(res).whereType<Map<String, dynamic>>().toList();
+    return AssessmentEventModel.listFromResponse(res);
   }
 
   // ── Availability CRUD ─────────────────────────────────────────────────────

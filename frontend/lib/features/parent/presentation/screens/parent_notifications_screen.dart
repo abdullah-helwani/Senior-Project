@@ -1,3 +1,6 @@
+import 'package:first_try/core/theme/theme.dart';
+import 'package:first_try/core/widgets/shared/empty_state.dart';
+import 'package:first_try/core/widgets/ui/ui.dart';
 import 'package:first_try/features/parent/data/models/parent_models.dart';
 import 'package:first_try/features/parent/presentation/cubit/parent_cubit.dart';
 import 'package:first_try/features/parent/presentation/cubit/parent_state.dart';
@@ -14,7 +17,8 @@ class ParentNotificationsScreen extends StatelessWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Alerts'),
+          title: const Text('Alerts',
+              style: TextStyle(fontWeight: FontWeight.w700)),
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Notifications'),
@@ -29,6 +33,7 @@ class ParentNotificationsScreen extends StatelessWidget {
               children: [
                 _NotificationList(
                   items: state.notifications,
+                  isWarning: false,
                   onTap: (n) {
                     context.read<ParentCubit>().markRead(n.id);
                     _showDetail(context, n);
@@ -50,63 +55,46 @@ class ParentNotificationsScreen extends StatelessWidget {
     );
   }
 
-  void _showDetail(BuildContext context, ParentNotificationModel n, {bool isWarning = false}) {
+  void _showDetail(BuildContext context, ParentNotificationModel n,
+      {bool isWarning = false}) {
     final cs = Theme.of(context).colorScheme;
-    showModalBottomSheet(
+    final accent = isWarning ? const Color(0xFFF59E0B) : cs.primary;
+    showAppBottomSheet<void>(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => DraggableScrollableSheet(
-        initialChildSize: 0.5,
-        minChildSize: 0.3,
-        maxChildSize: 0.85,
-        expand: false,
-        builder: (_, controller) => SingleChildScrollView(
-          controller: controller,
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Center(
-              child: Container(
-                width: 40, height: 4,
-                decoration: BoxDecoration(
-                  color: cs.outlineVariant,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
+      title: n.title,
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Row(children: [
               Container(
-                width: 44, height: 44,
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: isWarning
-                      ? Colors.orange.shade100
-                      : cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: Radii.smRadius,
                 ),
                 child: Icon(
-                  isWarning ? Icons.warning_rounded : Icons.notifications_rounded,
-                  color: isWarning ? Colors.orange.shade700 : cs.onPrimaryContainer,
+                  isWarning
+                      ? Icons.warning_rounded
+                      : Icons.notifications_rounded,
+                  color: accent,
+                  size: 20,
                 ),
               ),
               const SizedBox(width: 12),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(n.title,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700)),
-                  Text(_fmtDate(n.createdAt),
-                      style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
-                ]),
+              Text(
+                _fmtDate(n.createdAt),
+                style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
               ),
             ]),
-            const SizedBox(height: 20),
-            Text(n.body ?? '', style: const TextStyle(fontSize: 14, height: 1.6)),
-          ]),
+            const SizedBox(height: 16),
+            Text(
+              n.body ?? '',
+              style: const TextStyle(fontSize: 14, height: 1.6),
+            ),
+          ],
         ),
       ),
     );
@@ -121,37 +109,51 @@ class ParentNotificationsScreen extends StatelessWidget {
   }
 }
 
+// ── Notification list ─────────────────────────────────────────────────────────
+
 class _NotificationList extends StatelessWidget {
   final List<ParentNotificationModel> items;
-  final void Function(ParentNotificationModel) onTap;
   final bool isWarning;
+  final void Function(ParentNotificationModel) onTap;
 
   const _NotificationList({
     required this.items,
+    required this.isWarning,
     required this.onTap,
-    this.isWarning = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) {
-      return Center(
-        child: Text('No ${isWarning ? 'warnings' : 'notifications'}.',
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-      );
-    }
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      itemCount: items.length,
-      separatorBuilder: (context, _) => const SizedBox(height: 8),
-      itemBuilder: (context, i) => _NotificationTile(
-        item: items[i],
-        isWarning: isWarning,
-        onTap: () => onTap(items[i]),
-      ),
+    return RefreshIndicator(
+      onRefresh: () => context.read<ParentCubit>().load(),
+      child: items.isEmpty
+          ? ListView(
+              children: [
+                const SizedBox(height: 80),
+                EmptyState(
+                  icon: isWarning
+                      ? Icons.warning_amber_outlined
+                      : Icons.notifications_off_outlined,
+                  title: isWarning ? 'No warnings' : 'No notifications',
+                  subtitle: 'Pull to refresh.',
+                ),
+              ],
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: items.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, i) => _NotificationTile(
+                item: items[i],
+                isWarning: isWarning,
+                onTap: () => onTap(items[i]),
+              ),
+            ),
     );
   }
 }
+
+// ── Notification tile ─────────────────────────────────────────────────────────
 
 class _NotificationTile extends StatelessWidget {
   final ParentNotificationModel item;
@@ -167,72 +169,70 @@ class _NotificationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final accent = isWarning ? const Color(0xFFF59E0B) : cs.primary;
     final unread = !item.isRead;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+
+    final content = Row(children: [
+      Container(
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: unread
-              ? (isWarning
-                  ? Colors.orange.shade50
-                  : cs.primaryContainer.withValues(alpha: 0.3))
-              : cs.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: unread
-                ? (isWarning ? Colors.orange.shade200 : cs.primary.withValues(alpha: 0.3))
-                : cs.outlineVariant,
-          ),
+          color: unread ? accent.withValues(alpha: 0.15) : cs.surfaceContainerHighest,
+          shape: BoxShape.circle,
         ),
-        child: Row(children: [
-          Container(
-            width: 40, height: 40,
-            decoration: BoxDecoration(
-              color: isWarning ? Colors.orange.shade100 : cs.primaryContainer,
-              borderRadius: BorderRadius.circular(10),
+        child: Icon(
+          isWarning ? Icons.warning_rounded : Icons.notifications_rounded,
+          size: 20,
+          color: unread ? accent : cs.onSurfaceVariant,
+        ),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(
+            item.title,
+            style: TextStyle(
+              fontWeight: unread ? FontWeight.w700 : FontWeight.w600,
+              fontSize: 13,
             ),
-            child: Icon(
-              isWarning ? Icons.warning_rounded : Icons.notifications_rounded,
-              size: 20,
-              color: isWarning ? Colors.orange.shade700 : cs.onPrimaryContainer,
-            ),
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                Expanded(
-                  child: Text(item.title,
-                      style: TextStyle(
-                        fontWeight: unread ? FontWeight.w700 : FontWeight.w500,
-                        fontSize: 13,
-                      ),
-                      overflow: TextOverflow.ellipsis),
-                ),
-                if (unread)
-                  Container(
-                    width: 8, height: 8,
-                    decoration: BoxDecoration(
-                      color: isWarning ? Colors.orange.shade600 : cs.primary,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-              ]),
-              const SizedBox(height: 2),
-              Text(item.body ?? '',
-                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis),
-              const SizedBox(height: 4),
-              Text(_fmtDate(item.createdAt),
-                  style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant)),
-            ]),
+          if ((item.body ?? '').isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              item.body!,
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          const SizedBox(height: 4),
+          Text(
+            _fmtDate(item.createdAt),
+            style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
           ),
         ]),
       ),
-    );
+      if (unread)
+        Container(
+          width: 8,
+          height: 8,
+          margin: const EdgeInsets.only(left: 6),
+          decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
+        ),
+    ]);
+
+    return unread
+        ? AppCard.filled(
+            color: accent.withValues(alpha: 0.08),
+            padding: const EdgeInsets.all(14),
+            onTap: onTap,
+            child: content,
+          )
+        : AppCard.surface(
+            padding: const EdgeInsets.all(14),
+            onTap: onTap,
+            child: content,
+          );
   }
 
   String _fmtDate(String iso) {

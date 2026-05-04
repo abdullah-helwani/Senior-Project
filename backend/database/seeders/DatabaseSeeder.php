@@ -393,6 +393,156 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // ─────────────────────────────────────────────
+        // 14. BUS DRIVER
+        // ─────────────────────────────────────────────
+
+        // 14a. User + driver profile
+        $driverUserId = DB::table('users')->insertGetId([
+            'name' => 'Khalid Mansour', 'email' => 'driver@school.test',
+            'phone' => '0505555555', 'password' => $password,
+            'role_type' => 'driver', 'is_active' => true,
+            'created_at' => $now, 'updated_at' => $now,
+        ]);
+
+        $driverId = DB::table('driver')->insertGetId([
+            'user_id' => $driverUserId,
+        ], 'driver_id');
+
+        // 14b. Bus
+        $busId = DB::table('bus')->insertGetId([
+            'plate_number' => 'SBQ-4231',
+        ], 'bus_id');
+
+        // 14c. Assign bus to driver
+        DB::table('driverassignment')->insert([
+            'driver_id' => $driverId,
+            'bus_id'    => $busId,
+        ]);
+
+        // 14d. Route with 3 ordered stops
+        $routeId = DB::table('route')->insertGetId([
+            'name' => 'Route A – North District',
+        ], 'route_id');
+
+        $stop1Id = DB::table('routestop')->insertGetId([
+            'route_id' => $routeId, 'name' => 'Al-Noor Mosque',
+            'stoporder' => 1, 'latitude' => 24.7136, 'longitude' => 46.6753,
+        ], 'stop_id');
+
+        $stop2Id = DB::table('routestop')->insertGetId([
+            'route_id' => $routeId, 'name' => 'Central Market',
+            'stoporder' => 2, 'latitude' => 24.7200, 'longitude' => 46.6820,
+        ], 'stop_id');
+
+        $stop3Id = DB::table('routestop')->insertGetId([
+            'route_id' => $routeId, 'name' => 'School Main Gate',
+            'stoporder' => 3, 'latitude' => 24.7268, 'longitude' => 46.6911,
+        ], 'stop_id');
+
+        // 14e. Assign students to the bus / route / stop
+        DB::table('studentbusassignment')->insert([
+            // Ali boards at Stop 1 (Al-Noor Mosque)
+            [
+                'student_id' => $student1Id, 'bus_id' => $busId,
+                'route_id' => $routeId, 'stop_id' => $stop1Id,
+            ],
+            // Fatima boards at Stop 2 (Central Market)
+            [
+                'student_id' => $student2Id, 'bus_id' => $busId,
+                'route_id' => $routeId, 'stop_id' => $stop2Id,
+            ],
+        ]);
+
+        // 14f. Trips
+        // Today → scheduled (driver will see it on the home screen)
+        $tripTodayId = DB::table('trip')->insertGetId([
+            'bus_id' => $busId, 'driver_id' => $driverId,
+            'route_id' => $routeId, 'date' => $now->toDateString(),
+            'type' => 'morning',
+        ], 'trip_id');
+
+        // Yesterday → completed (shows in history with stop events)
+        $tripYesterdayId = DB::table('trip')->insertGetId([
+            'bus_id' => $busId, 'driver_id' => $driverId,
+            'route_id' => $routeId,
+            'date' => Carbon::yesterday()->toDateString(),
+            'type' => 'morning',
+        ], 'trip_id');
+
+        // 3 days ago → afternoon run (history)
+        $tripOldId = DB::table('trip')->insertGetId([
+            'bus_id' => $busId, 'driver_id' => $driverId,
+            'route_id' => $routeId,
+            'date' => Carbon::now()->subDays(3)->toDateString(),
+            'type' => 'afternoon',
+        ], 'trip_id');
+
+        // 14g. Stop events for yesterday's trip (both students boarded + dropped)
+        $yBase = Carbon::yesterday()->setTime(7, 0);
+        DB::table('tripstopevent')->insert([
+            // Ali boarded at stop 1
+            [
+                'trip_id' => $tripYesterdayId, 'stop_id' => $stop1Id,
+                'student_id' => $student1Id, 'eventtype' => 'boarded',
+                'eventat' => $yBase->copy()->addMinutes(5),
+            ],
+            // Ali dropped at stop 3 (school gate)
+            [
+                'trip_id' => $tripYesterdayId, 'stop_id' => $stop3Id,
+                'student_id' => $student1Id, 'eventtype' => 'dropped',
+                'eventat' => $yBase->copy()->addMinutes(25),
+            ],
+            // Fatima boarded at stop 2
+            [
+                'trip_id' => $tripYesterdayId, 'stop_id' => $stop2Id,
+                'student_id' => $student2Id, 'eventtype' => 'boarded',
+                'eventat' => $yBase->copy()->addMinutes(12),
+            ],
+            // Fatima dropped at stop 3
+            [
+                'trip_id' => $tripYesterdayId, 'stop_id' => $stop3Id,
+                'student_id' => $student2Id, 'eventtype' => 'dropped',
+                'eventat' => $yBase->copy()->addMinutes(25),
+            ],
+        ]);
+
+        // 14g-ii. Seed a live GPS ping for today's trip so the parent map
+        //         has something to show right away.
+        DB::table('trackingping')->insert([
+            [
+                'trip_id'    => $tripTodayId,
+                'latitude'   => 24.7200,   // bus is currently at Stop 2 (Central Market)
+                'longitude'  => 46.6820,
+                'capturedat' => Carbon::now()->subMinutes(2),
+            ],
+        ]);
+
+        // Stop events for the 3-days-ago afternoon trip
+        $aBase = Carbon::now()->subDays(3)->setTime(13, 30);
+        DB::table('tripstopevent')->insert([
+            [
+                'trip_id' => $tripOldId, 'stop_id' => $stop3Id,
+                'student_id' => $student1Id, 'eventtype' => 'boarded',
+                'eventat' => $aBase->copy(),
+            ],
+            [
+                'trip_id' => $tripOldId, 'stop_id' => $stop1Id,
+                'student_id' => $student1Id, 'eventtype' => 'dropped',
+                'eventat' => $aBase->copy()->addMinutes(20),
+            ],
+            [
+                'trip_id' => $tripOldId, 'stop_id' => $stop3Id,
+                'student_id' => $student2Id, 'eventtype' => 'boarded',
+                'eventat' => $aBase->copy(),
+            ],
+            [
+                'trip_id' => $tripOldId, 'stop_id' => $stop2Id,
+                'student_id' => $student2Id, 'eventtype' => 'dropped',
+                'eventat' => $aBase->copy()->addMinutes(14),
+            ],
+        ]);
+
+        // ─────────────────────────────────────────────
         // DONE — Print login cheat sheet
         // ─────────────────────────────────────────────
         $this->command->info('');
@@ -403,6 +553,10 @@ class DatabaseSeeder extends Seeder
         $this->command->info('Student: ali@school.test     (id: ' . $student1Id . ')');
         $this->command->info('Student: fatima@school.test  (id: ' . $student2Id . ')');
         $this->command->info('Parent:  parent@school.test  (id: ' . $parentId . ')');
+        $this->command->info('Driver:  driver@school.test  (id: ' . $driverId . ')');
+        $this->command->info('==========================================');
+        $this->command->info('Bus: SBQ-4231  |  Route: Route A – North District');
+        $this->command->info('Trips: today (scheduled), yesterday (completed), -3d afternoon (completed)');
         $this->command->info('==========================================');
     }
 }

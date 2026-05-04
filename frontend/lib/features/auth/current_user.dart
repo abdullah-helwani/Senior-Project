@@ -27,6 +27,26 @@ extension CurrentUserContext on BuildContext {
 
   int get currentUserId   => currentUser.id;
   String get currentRole  => currentUser.roleType;
+
+  /// Role-specific PK (`teachers.id` / `students.id` / `guardians.id` /
+  /// `driver.driver_id`). Use this for `/teacher/{id}/...` style routes
+  /// where `users.id` ≠ role table id. Falls back to `users.id` only when
+  /// the backend hasn't populated it (mock/old sessions); call sites that
+  /// can show a misleading "wrong user" view should still null-check.
+  int get currentRoleId {
+    final user = currentUser;
+    if (user.roleId == null) {
+      // Loud breadcrumb so we can spot stale/cached sessions in the console.
+      // (DevTools → Console will show this if the role_id never made it.)
+      // ignore: avoid_print
+      print(
+        '[currentRoleId] user.roleId is NULL — falling back to users.id=${user.id}. '
+        'Backend probably did not return role_id, or the cached UserModel is stale '
+        '(log out + back in to refresh).',
+      );
+    }
+    return user.roleId ?? user.id;
+  }
   String get currentToken {
     final state = read<AuthCubit>().state;
     if (state is AuthAuthenticated) return state.token;

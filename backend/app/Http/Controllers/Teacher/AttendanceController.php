@@ -88,9 +88,22 @@ class AttendanceController extends Controller
      */
     public function index(int $teacherId, Request $request)
     {
+        // section_id is optional — without it, the frontend's Attendance tab
+        // opens with no filter and just wants a list (potentially empty).
+        // Returning a 422 here was crashing the screen with a generic
+        // ServerException.
         $request->validate([
-            'section_id' => 'required|integer',
+            'section_id' => 'nullable|integer',
         ]);
+
+        if (! $request->filled('section_id')) {
+            return response()->json([
+                'date'       => $request->input('date', now()->toDateString()),
+                'recorded'   => false,
+                'students'   => [],
+                'sessions'   => [],
+            ]);
+        }
 
         $date = $request->input('date', now()->toDateString());
 

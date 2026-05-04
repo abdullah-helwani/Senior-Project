@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:first_try/core/api/dio_consumer.dart';
+import 'package:first_try/core/widgets/shared/animated_shell.dart';
 import 'package:first_try/features/auth/current_user.dart';
 import 'package:first_try/features/driver/data/repos/driver_repo.dart';
 import 'package:first_try/features/driver/presentation/cubit/driver_profile_cubit.dart';
@@ -29,7 +30,7 @@ class _DriverShellScreenState extends State<DriverShellScreen> {
   @override
   void initState() {
     super.initState();
-    final driverId = context.currentUserId;
+    final driverId = context.currentRoleId;
 
     _repo = DriverRepo(api: DioConsumer(dio: Dio()));
     _todayCubit   = TodayTripsCubit(repo: _repo, driverId: driverId)..loadTodayTrips();
@@ -54,7 +55,7 @@ class _DriverShellScreenState extends State<DriverShellScreen> {
         BlocProvider.value(value: _profileCubit),
       ],
       child: Scaffold(
-        body: IndexedStack(
+        body: AnimatedShell(
           index: _currentIndex,
           children: const [
             TodayTripsScreen(),

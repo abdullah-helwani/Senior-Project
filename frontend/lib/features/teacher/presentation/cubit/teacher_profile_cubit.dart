@@ -1,4 +1,3 @@
-import 'package:first_try/features/teacher/data/mocks/teacher_mock_data.dart';
 import 'package:first_try/features/teacher/data/repos/teacher_repo.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_profile_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,8 +10,8 @@ class TeacherProfileCubit extends Cubit<TeacherProfileState> {
     emit(TeacherProfileLoading());
     try {
       emit(TeacherProfileLoaded(await repo.getProfile()));
-    } catch (_) {
-      emit(TeacherProfileLoaded(TeacherMockData.profile));
+    } catch (e) {
+      emit(TeacherProfileError(e.toString()));
     }
   }
 }

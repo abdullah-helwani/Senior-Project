@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:first_try/core/api/dio_consumer.dart';
+import 'package:first_try/core/widgets/shared/animated_shell.dart';
 import 'package:first_try/features/auth/current_user.dart';
 import 'package:first_try/features/student/data/repos/student_repo.dart';
 import 'package:first_try/features/student/presentation/cubit/attendance_cubit.dart';
@@ -41,7 +42,7 @@ class _StudentShellScreenState extends State<StudentShellScreen> {
   @override
   void initState() {
     super.initState();
-    final studentId = context.currentUserId;
+    final studentId = context.currentRoleId;
 
     _repo = StudentRepo(api: DioConsumer(dio: Dio()), studentId: studentId);
 
@@ -82,7 +83,7 @@ class _StudentShellScreenState extends State<StudentShellScreen> {
         BlocProvider.value(value: _profileCubit),
       ],
       child: Scaffold(
-        body: IndexedStack(
+        body: AnimatedShell(
           index: _currentIndex,
           children: const [
             StudentHomeScreen(),

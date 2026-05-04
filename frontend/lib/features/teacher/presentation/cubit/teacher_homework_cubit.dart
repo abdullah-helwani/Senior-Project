@@ -12,8 +12,8 @@ class TeacherHomeworkCubit extends Cubit<TeacherHomeworkState> {
     emit(TeacherHomeworkLoading());
     try {
       emit(TeacherHomeworkLoaded(homework: await repo.getHomework()));
-    } catch (_) {
-      emit(TeacherHomeworkLoaded(homework: TeacherMockData.homework));
+    } catch (e) {
+      emit(TeacherHomeworkError(e.toString()));
     }
   }
 

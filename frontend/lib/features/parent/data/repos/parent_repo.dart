@@ -1,4 +1,5 @@
 import 'package:first_try/core/api/api_consumer.dart';
+import 'package:first_try/core/models/assessment_event_model.dart';
 import 'package:first_try/core/utils/app_url.dart';
 import 'package:first_try/features/parent/data/models/parent_extra_models.dart';
 import 'package:first_try/features/parent/data/models/parent_models.dart';
@@ -98,10 +99,10 @@ class ParentRepo {
   }
 
   /// Per-child assessment calendar (upcoming quizzes/exams).
-  Future<List<Map<String, dynamic>>> getChildAssessmentCalendar(int childId) async {
+  Future<List<AssessmentEventModel>> getChildAssessmentCalendar(int childId) async {
     final res = await api
         .getApi(AppUrl.parentChildAssessmentCalendar(parentId, childId));
-    return _toList(res).whereType<Map<String, dynamic>>().toList();
+    return AssessmentEventModel.listFromResponse(res);
   }
 
   // ── Bus (three endpoints) ──────────────────────────────────────────────────
