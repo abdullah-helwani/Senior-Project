@@ -1,14 +1,21 @@
 import 'package:dio/dio.dart';
 import 'package:first_try/core/api/dio_consumer.dart';
+import 'package:first_try/core/widgets/shared/animated_shell.dart';
 import 'package:first_try/features/auth/current_user.dart';
 import 'package:first_try/features/teacher/data/repos/teacher_repo.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_attendance_cubit.dart';
+import 'package:first_try/features/teacher/presentation/cubit/teacher_availability_cubit.dart';
+import 'package:first_try/features/teacher/presentation/cubit/teacher_behavior_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_classes_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_dashboard_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_homework_cubit.dart';
+import 'package:first_try/features/teacher/presentation/cubit/teacher_messages_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_notifications_cubit.dart';
+import 'package:first_try/features/teacher/presentation/cubit/teacher_performance_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_profile_cubit.dart';
+import 'package:first_try/features/teacher/presentation/cubit/teacher_salary_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_schedule_cubit.dart';
+import 'package:first_try/features/teacher/presentation/cubit/teacher_vacation_cubit.dart';
 import 'package:first_try/features/teacher/presentation/screens/teacher_attendance_screen.dart';
 import 'package:first_try/features/teacher/presentation/screens/teacher_classes_screen.dart';
 import 'package:first_try/features/teacher/presentation/screens/teacher_home_screen.dart';
@@ -35,11 +42,17 @@ class _TeacherShellScreenState extends State<TeacherShellScreen> {
   late final TeacherAttendanceCubit _attendanceCubit;
   late final TeacherNotificationsCubit _notificationsCubit;
   late final TeacherProfileCubit _profileCubit;
+  late final TeacherMessagesCubit _messagesCubit;
+  late final TeacherBehaviorCubit _behaviorCubit;
+  late final TeacherPerformanceCubit _performanceCubit;
+  late final TeacherSalaryCubit _salaryCubit;
+  late final TeacherVacationCubit _vacationCubit;
+  late final TeacherAvailabilityCubit _availabilityCubit;
 
   @override
   void initState() {
     super.initState();
-    final teacherId = context.currentUserId;
+    final teacherId = context.currentRoleId;
 
     _repo = TeacherRepo(api: DioConsumer(dio: Dio()), teacherId: teacherId);
     _dashboardCubit     = TeacherDashboardCubit(repo: _repo)..load();
@@ -49,6 +62,12 @@ class _TeacherShellScreenState extends State<TeacherShellScreen> {
     _attendanceCubit    = TeacherAttendanceCubit(repo: _repo)..load();
     _notificationsCubit = TeacherNotificationsCubit(repo: _repo)..load();
     _profileCubit       = TeacherProfileCubit(repo: _repo)..load();
+    _messagesCubit      = TeacherMessagesCubit(repo: _repo);
+    _behaviorCubit      = TeacherBehaviorCubit(repo: _repo);
+    _performanceCubit   = TeacherPerformanceCubit(repo: _repo);
+    _salaryCubit        = TeacherSalaryCubit(repo: _repo);
+    _vacationCubit      = TeacherVacationCubit(repo: _repo);
+    _availabilityCubit  = TeacherAvailabilityCubit(repo: _repo);
   }
 
   @override
@@ -60,6 +79,12 @@ class _TeacherShellScreenState extends State<TeacherShellScreen> {
     _attendanceCubit.close();
     _notificationsCubit.close();
     _profileCubit.close();
+    _messagesCubit.close();
+    _behaviorCubit.close();
+    _performanceCubit.close();
+    _salaryCubit.close();
+    _vacationCubit.close();
+    _availabilityCubit.close();
     super.dispose();
   }
 
@@ -74,9 +99,15 @@ class _TeacherShellScreenState extends State<TeacherShellScreen> {
         BlocProvider.value(value: _attendanceCubit),
         BlocProvider.value(value: _notificationsCubit),
         BlocProvider.value(value: _profileCubit),
+        BlocProvider.value(value: _messagesCubit),
+        BlocProvider.value(value: _behaviorCubit),
+        BlocProvider.value(value: _performanceCubit),
+        BlocProvider.value(value: _salaryCubit),
+        BlocProvider.value(value: _vacationCubit),
+        BlocProvider.value(value: _availabilityCubit),
       ],
       child: Scaffold(
-        body: IndexedStack(
+        body: AnimatedShell(
           index: _index,
           children: const [
             TeacherHomeScreen(),

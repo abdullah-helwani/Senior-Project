@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:first_try/core/api/api_consumer.dart';
 import 'package:first_try/core/utils/app_url.dart';
 import 'package:first_try/features/auth/data/models/auth_model.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AuthRepo {
   final ApiConsumer api;
@@ -24,14 +25,20 @@ class AuthRepo {
   }
 
   /// Validate the stored token and refresh user data from the server.
-  /// Backend shape: { user: { id, name, email, phone, profile_picture }, role }
+  ///
+  /// Backend `/me` returns a flat object:
+  ///   { id, name, email, phone, profile_picture, role, role_id, is_active,
+  ///     teacher|student|guardian|admin: {...} }
   Future<UserModel> me() async {
     final response = await api.getApi(AppUrl.me) as Map<String, dynamic>;
-    final userMap = Map<String, dynamic>.from(
-      response['user'] as Map<String, dynamic>,
-    );
-    userMap['role_type'] = response['role'] as String;
-    return UserModel.fromJson(userMap);
+    return UserModel.fromJson({
+      'id': response['id'],
+      'name': response['name'],
+      'email': response['email'],
+      'role_type': response['role'],
+      'role_id': response['role_id'],
+      'profile_picture': response['profile_picture'],
+    });
   }
 
   Future<void> changePassword({
@@ -49,9 +56,14 @@ class AuthRepo {
   }
 
   /// Upload a new profile picture (multipart form-data).
-  Future<String?> updateProfilePicture(String filePath) async {
+  /// Uses [XFile.readAsBytes] so it works on Web and native alike.
+  Future<String?> updateProfilePicture(XFile file) async {
+    final bytes = await file.readAsBytes();
     final formData = FormData.fromMap({
-      'profile_picture': await MultipartFile.fromFile(filePath),
+      'profile_picture': MultipartFile.fromBytes(
+        bytes,
+        filename: file.name,
+      ),
     });
     final response = await api.post(
       AppUrl.profilePicture,

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:first_try/core/api/dio_consumer.dart';
 import 'package:first_try/core/router/go_router_refresh_stream.dart';
 import 'package:first_try/core/router/route_name.dart';
+import 'package:first_try/core/theme/app_motion.dart';
 import 'package:first_try/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:first_try/features/auth/presentation/cubit/auth_state.dart';
 import 'package:first_try/features/auth/presentation/screens/login_screen.dart';
@@ -13,8 +14,32 @@ import 'package:first_try/features/driver/presentation/screens/trip_detail_scree
 import 'package:first_try/features/parent/presentation/screens/parent_shell_screen.dart';
 import 'package:first_try/features/student/presentation/screens/student_shell_screen.dart';
 import 'package:first_try/features/teacher/presentation/screens/teacher_shell_screen.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+/// Wraps a route in a soft fade-through transition. Used for the auth flow
+/// (splash → login → role home) where a snap or slide feels jarring.
+CustomTransitionPage<T> _fadePage<T>({required Widget child, LocalKey? key}) {
+  return CustomTransitionPage<T>(
+    key: key,
+    transitionDuration: Motion.medium,
+    reverseTransitionDuration: Motion.fast,
+    child: child,
+    transitionsBuilder: (context, animation, secondary, child) {
+      final fade = CurvedAnimation(parent: animation, curve: Motion.standard);
+      return FadeTransition(
+        opacity: fade,
+        child: ScaleTransition(
+          // Subtle zoom-in so the next screen feels like it's stepping
+          // forward, not just appearing.
+          scale: Tween<double>(begin: 0.985, end: 1).animate(fade),
+          child: child,
+        ),
+      );
+    },
+  );
+}
 
 class AppRouter {
   static GoRouter createRouter(AuthCubit authCubit) {
@@ -64,34 +89,38 @@ class AppRouter {
         GoRoute(
           path: '/splash',
           name: RouteName.splash,
-          builder: (context, _) => const SplashScreen(),
+          pageBuilder: (context, _) => _fadePage(child: const SplashScreen()),
         ),
         GoRoute(
           path: '/login',
           name: RouteName.login,
-          builder: (context, _) => const LoginScreen(),
+          pageBuilder: (context, _) => _fadePage(child: const LoginScreen()),
         ),
         GoRoute(
           path: '/student',
           name: RouteName.studentHome,
-          builder: (context, _) => const StudentShellScreen(),
+          pageBuilder: (context, _) =>
+              _fadePage(child: const StudentShellScreen()),
         ),
         GoRoute(
           path: '/teacher',
           name: RouteName.teacherHome,
-          builder: (context, _) => const TeacherShellScreen(),
+          pageBuilder: (context, _) =>
+              _fadePage(child: const TeacherShellScreen()),
         ),
         GoRoute(
           path: '/parent',
           name: RouteName.parentHome,
-          builder: (context, _) => const ParentShellScreen(),
+          pageBuilder: (context, _) =>
+              _fadePage(child: const ParentShellScreen()),
         ),
 
         // ── Driver ──────────────────────────────────────────────────────────
         GoRoute(
           path: '/driver',
           name: RouteName.driverHome,
-          builder: (context, _) => const DriverShellScreen(),
+          pageBuilder: (context, _) =>
+              _fadePage(child: const DriverShellScreen()),
           routes: [
             GoRoute(
               path: 'trip/:tripId',

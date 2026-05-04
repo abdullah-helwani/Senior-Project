@@ -1,4 +1,6 @@
+import 'package:dio/dio.dart';
 import 'package:first_try/core/api/api_consumer.dart';
+import 'package:first_try/core/models/assessment_event_model.dart';
 import 'package:first_try/core/utils/app_url.dart';
 import 'package:first_try/features/student/data/models/student_models.dart';
 
@@ -43,6 +45,11 @@ class StudentRepo {
         .toList();
   }
 
+  Future<List<AssessmentEventModel>> getAssessmentCalendar() async {
+    final res = await api.getApi(AppUrl.studentAssessmentCalendar(studentId));
+    return AssessmentEventModel.listFromResponse(res);
+  }
+
   Future<List<HomeworkModel>> getHomework() async {
     final res = await api.getApi(AppUrl.studentHomework(studentId));
     return _toList(res)
@@ -56,10 +63,26 @@ class StudentRepo {
   }
 
   // POST /student/{id}/submissions — multipart {homework_id, file?}
-  Future<void> submitHomework(int hwId, String content) async {
+  /// Submits homework with an optional file attachment.
+  ///
+  /// On web, [filePath] should be the picked file's bytes wrapped via the
+  /// caller (we accept either a path or pre-built [MultipartFile]). For
+  /// mobile, a plain path is fine.
+  Future<void> submitHomework({
+    required int hwId,
+    String? filePath,
+    List<int>? fileBytes,
+    String? fileName,
+  }) async {
+    final form = <String, dynamic>{'homework_id': hwId};
+    if (fileBytes != null) {
+      form['file'] = MultipartFile.fromBytes(fileBytes, filename: fileName);
+    } else if (filePath != null) {
+      form['file'] = await MultipartFile.fromFile(filePath, filename: fileName);
+    }
     await api.post(
       AppUrl.studentSubmissions(studentId),
-      data: {'homework_id': hwId, 'content': content},
+      data: FormData.fromMap(form),
     );
   }
 

@@ -324,15 +324,43 @@ class ParentBusModel extends Equatable {
 
   bool get hasLocation => latitude != null && longitude != null;
 
-  factory ParentBusModel.fromJson(Map<String, dynamic> json) => ParentBusModel(
-        busPlate: json['bus_plate'] as String,
-        routeName: json['route_name'] as String,
-        pickupStopName: json['pickup_stop_name'] as String,
-        latitude: (json['latitude'] as num?)?.toDouble(),
-        longitude: (json['longitude'] as num?)?.toDouble(),
-        driverName: json['driver_name'] as String?,
-        updatedAt: json['updated_at'] as String?,
-      );
+  factory ParentBusModel.fromJson(Map<String, dynamic> json) {
+    // The liveLocation endpoint returns { trip: {...}, location: {...} }.
+    // The assignment endpoint returns the raw StudentBusAssignment with
+    // nested bus/route/stop.  We normalise both shapes here.
+    final trip = json['trip'] as Map<String, dynamic>?;
+    final location = json['location'] as Map<String, dynamic>?;
+    final bus = json['bus'] as Map<String, dynamic>?;
+    final route = json['route'] as Map<String, dynamic>?;
+    final stop = json['stop'] as Map<String, dynamic>?;
+    final driver = trip?['driver'] as Map<String, dynamic>?;
+    final driverUser = driver?['user'] as Map<String, dynamic>?;
+
+    // lat/lng: prefer the dedicated location ping, fall back to top-level.
+    final lat = (location?['latitude'] ?? json['latitude'] as num?)?.toDouble();
+    final lng = (location?['longitude'] ?? json['longitude'] as num?)?.toDouble();
+
+    return ParentBusModel(
+      busPlate: (json['bus_plate']
+              ?? bus?['plate_number']
+              ?? trip?['bus']?['plate_number']
+              ?? '') as String,
+      routeName: (json['route_name']
+              ?? route?['name']
+              ?? trip?['route']?['name']
+              ?? '') as String,
+      pickupStopName: (json['pickup_stop_name']
+              ?? stop?['name']
+              ?? '') as String,
+      latitude: lat,
+      longitude: lng,
+      driverName: (json['driver_name']
+              ?? driverUser?['name']
+              ?? driver?['name']) as String?,
+      updatedAt: (location?['capturedat']
+              ?? json['updated_at']) as String?,
+    );
+  }
 
   @override
   List<Object?> get props => [busPlate, routeName, pickupStopName, latitude, longitude];

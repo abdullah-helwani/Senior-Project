@@ -1,4 +1,3 @@
-import 'package:first_try/features/teacher/data/mocks/teacher_mock_data.dart';
 import 'package:first_try/features/teacher/data/repos/teacher_repo.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_notifications_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,8 +10,8 @@ class TeacherNotificationsCubit extends Cubit<TeacherNotificationsState> {
     emit(TeacherNotificationsLoading());
     try {
       emit(TeacherNotificationsLoaded(await repo.getNotifications()));
-    } catch (_) {
-      emit(TeacherNotificationsLoaded(TeacherMockData.notifications));
+    } catch (e) {
+      emit(TeacherNotificationsError(e.toString()));
     }
   }
 

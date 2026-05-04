@@ -1,7 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:first_try/core/api/dio_consumer.dart';
+import 'package:first_try/core/widgets/shared/animated_shell.dart';
 import 'package:first_try/features/auth/current_user.dart';
 import 'package:first_try/features/parent/data/repos/parent_repo.dart';
+import 'package:first_try/features/parent/presentation/cubit/billing_cubit.dart';
+import 'package:first_try/features/parent/presentation/cubit/complaints_cubit.dart';
 import 'package:first_try/features/parent/presentation/cubit/parent_cubit.dart';
 import 'package:first_try/features/parent/presentation/cubit/parent_state.dart';
 import 'package:first_try/features/parent/presentation/screens/parent_academics_screen.dart';
@@ -21,32 +24,42 @@ class ParentShellScreen extends StatefulWidget {
 
 class _ParentShellScreenState extends State<ParentShellScreen> {
   int _index = 0;
+  late final ParentRepo _repo;
   late final ParentCubit _cubit;
+  late final BillingCubit _billingCubit;
+  late final ComplaintsCubit _complaintsCubit;
 
   @override
   void initState() {
     super.initState();
-    final parentId = context.currentUserId;
-    _cubit = ParentCubit(
-      repo: ParentRepo(api: DioConsumer(dio: Dio()), parentId: parentId),
-    )..load();
+    final parentId = context.currentRoleId;
+    _repo = ParentRepo(api: DioConsumer(dio: Dio()), parentId: parentId);
+    _cubit = ParentCubit(repo: _repo)..load();
+    _billingCubit = BillingCubit(repo: _repo);
+    _complaintsCubit = ComplaintsCubit(repo: _repo);
   }
 
   @override
   void dispose() {
     _cubit.close();
+    _billingCubit.close();
+    _complaintsCubit.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _cubit,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _cubit),
+        BlocProvider.value(value: _billingCubit),
+        BlocProvider.value(value: _complaintsCubit),
+      ],
       child: BlocBuilder<ParentCubit, ParentState>(
         builder: (context, state) {
           final unread = state is ParentLoaded ? state.unreadCount : 0;
           return Scaffold(
-            body: IndexedStack(
+            body: AnimatedShell(
               index: _index,
               children: const [
                 ParentHomeScreen(),

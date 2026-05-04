@@ -1,9 +1,10 @@
-import 'package:dio/dio.dart';
-import 'package:first_try/core/api/dio_consumer.dart';
+import 'package:first_try/core/theme/theme.dart';
 import 'package:first_try/core/widgets/shared/change_password_modal.dart';
 import 'package:first_try/core/widgets/shared/error_view.dart';
 import 'package:first_try/core/widgets/shared/loading_view.dart';
-import 'package:first_try/features/auth/data/repos/auth_repo.dart';
+import 'package:first_try/core/widgets/shared/skeletons.dart';
+import 'package:first_try/core/widgets/shared/profile_avatar_picker.dart';
+import 'package:first_try/core/widgets/ui/ui.dart';
 import 'package:first_try/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:first_try/features/driver/data/models/driver_models.dart';
 import 'package:first_try/features/driver/presentation/cubit/driver_profile_cubit.dart';
@@ -17,12 +18,14 @@ class DriverProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+      backgroundColor:
+          Theme.of(context).colorScheme.surfaceContainerLowest,
       body: SafeArea(
         child: BlocBuilder<DriverProfileCubit, DriverProfileState>(
           builder: (context, state) {
-            if (state is DriverProfileLoading || state is DriverProfileInitial) {
-              return const LoadingView();
+            if (state is DriverProfileLoading ||
+                state is DriverProfileInitial) {
+              return const ProfileSkeleton();
             }
             if (state is DriverProfileError) {
               return ErrorView(
@@ -57,26 +60,14 @@ class _ProfileContent extends StatelessWidget {
         Center(
           child: Column(
             children: [
-              CircleAvatar(
-                radius: 44,
-                backgroundColor: cs.primaryContainer,
-                child: Text(
-                  profile.name.isNotEmpty
-                      ? profile.name[0].toUpperCase()
-                      : '?',
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w800,
-                    color: cs.onPrimaryContainer,
-                  ),
-                ),
-              ),
+              ProfileAvatarPicker(displayName: profile.name),
               const SizedBox(height: 12),
               Text(
                 profile.name,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 4),
               Text(
@@ -92,8 +83,14 @@ class _ProfileContent extends StatelessWidget {
         _SectionCard(
           title: 'Contact Information',
           children: [
-            _InfoRow(icon: Icons.email_outlined, label: 'Email', value: profile.email),
-            _InfoRow(icon: Icons.phone_outlined,  label: 'Phone', value: profile.phone.isNotEmpty ? profile.phone : '—'),
+            _InfoRow(
+                icon: Icons.email_outlined,
+                label: 'Email',
+                value: profile.email),
+            _InfoRow(
+                icon: Icons.phone_outlined,
+                label: 'Phone',
+                value: profile.phone.isNotEmpty ? profile.phone : '—'),
           ],
         ),
         const SizedBox(height: 16),
@@ -109,9 +106,7 @@ class _ProfileContent extends StatelessWidget {
                         style: TextStyle(color: cs.outline)),
                   ),
                 ]
-              : profile.buses
-                  .map((b) => _BusRow(bus: b))
-                  .toList(),
+              : profile.buses.map((b) => _BusRow(bus: b)).toList(),
         ),
         const SizedBox(height: 32),
 
@@ -123,21 +118,17 @@ class _ProfileContent extends StatelessWidget {
           style: OutlinedButton.styleFrom(
             minimumSize: const Size.fromHeight(48),
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
+                borderRadius: Radii.smRadius),
           ),
         ),
         const SizedBox(height: 12),
 
-        FilledButton.icon(
-          onPressed: () => _confirmLogout(context),
-          icon: const Icon(Icons.logout_rounded),
-          label: const Text('Logout'),
-          style: FilledButton.styleFrom(
-            backgroundColor: cs.errorContainer,
-            foregroundColor: cs.onErrorContainer,
-            minimumSize: const Size.fromHeight(48),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
+        SizedBox(
+          width: double.infinity,
+          child: AppButton.danger(
+            label: 'Logout',
+            icon: Icons.logout_rounded,
+            onPressed: () => _confirmLogout(context),
           ),
         ),
       ],
@@ -145,13 +136,14 @@ class _ProfileContent extends StatelessWidget {
   }
 
   void _openChangePassword(BuildContext context) {
-    final repo = AuthRepo(api: DioConsumer(dio: Dio()));
     showChangePasswordModal(
       context,
       onSubmit: (current, newPw) async {
         try {
-          await repo.changePassword(
-              currentPassword: current, newPassword: newPw);
+          await context.read<AuthCubit>().changePassword(
+                currentPassword: current,
+                newPassword: newPw,
+              );
           return null;
         } catch (e) {
           return e.toString();
@@ -160,30 +152,17 @@ class _ProfileContent extends StatelessWidget {
     );
   }
 
-  void _confirmLogout(BuildContext context) {
-    showDialog(
+  void _confirmLogout(BuildContext context) async {
+    final confirmed = await showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              context.read<AuthCubit>().logout();
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
+      title: 'Logout',
+      message: 'Are you sure you want to logout?',
+      confirmLabel: 'Logout',
+      destructive: true,
     );
+    if (confirmed && context.mounted) {
+      context.read<AuthCubit>().logout();
+    }
   }
 }
 
@@ -208,13 +187,8 @@ class _SectionCard extends StatelessWidget {
               ),
         ),
         const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-                color: Theme.of(context).colorScheme.outlineVariant),
-          ),
+        AppCard.surface(
+          padding: EdgeInsets.zero,
           child: Column(children: children),
         ),
       ],
@@ -275,7 +249,7 @@ class _BusRow extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: cs.secondaryContainer,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: Radii.smRadius,
             ),
             child: Icon(Icons.directions_bus_rounded,
                 size: 20, color: cs.onSecondaryContainer),

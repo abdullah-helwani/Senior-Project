@@ -75,8 +75,28 @@ class AuthController extends Controller
                 'email'           => $user->email,
                 'phone'           => $user->phone,
                 'profile_picture' => $user->profile_picture,
+                // Role-specific PK (teachers.id / students.id / guardians.id /
+                // drivers.id) — frontend uses this for `/teacher/{id}/...`
+                // style routes since users.id != role table id.
+                'role_id'         => $this->roleIdFor($user),
             ],
         ]);
+    }
+
+    /**
+     * Resolve the role-specific PK for a user. Returns null when the
+     * relationship row hasn't been created (e.g. a fresh admin user, or
+     * a misseeded account).
+     */
+    private function roleIdFor($user): ?int
+    {
+        return match ($user->role_type) {
+            'teacher' => optional($user->teacher)->id,
+            'student' => optional($user->student)->id,
+            'parent'  => optional($user->guardian)->id,
+            'driver'  => \App\Models\Driver::where('user_id', $user->id)->value('driver_id'),
+            default   => null,
+        };
     }
 
     public function me(Request $request)
@@ -90,6 +110,7 @@ class AuthController extends Controller
             'phone'           => $user->phone,
             'profile_picture' => $user->profile_picture,
             'role'            => $user->role_type,
+            'role_id'         => $this->roleIdFor($user),
             'is_active'       => $user->is_active,
         ];
 

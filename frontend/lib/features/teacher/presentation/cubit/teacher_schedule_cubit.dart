@@ -1,4 +1,3 @@
-import 'package:first_try/features/teacher/data/mocks/teacher_mock_data.dart';
 import 'package:first_try/features/teacher/data/repos/teacher_repo.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_schedule_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,9 +11,8 @@ class TeacherScheduleCubit extends Cubit<TeacherScheduleState> {
     try {
       final slots = await repo.getSchedule();
       emit(TeacherScheduleLoaded(slots: slots, selectedDay: _todayKey()));
-    } catch (_) {
-      emit(TeacherScheduleLoaded(
-          slots: TeacherMockData.schedule, selectedDay: _todayKey()));
+    } catch (e) {
+      emit(TeacherScheduleError(e.toString()));
     }
   }
 

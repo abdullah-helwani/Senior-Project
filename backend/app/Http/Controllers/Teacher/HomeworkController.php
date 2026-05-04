@@ -24,6 +24,7 @@ class HomeworkController extends Controller
         Teacher::findOrFail($teacherId);
 
         $query = Homework::with(['subject', 'section.schoolClass'])
+            ->withCount('submissions as submission_count')
             ->where('teacher_id', $teacherId);
 
         if ($request->filled('subject_id')) {
@@ -34,9 +35,30 @@ class HomeworkController extends Controller
             $query->where('section_id', $request->section_id);
         }
 
-        return response()->json(
-            $query->latest('due_date')->paginate($request->input('per_page', 15))
-        );
+        $page = $query->latest('due_date')
+            ->paginate($request->input('per_page', 15));
+
+        // Flatten each Homework row into the shape the Flutter client expects.
+        // Frontend `TeacherHomeworkModel.fromJson` reads strings for subject /
+        // class_name, so we resolve the eager-loaded relations to scalars.
+        $page->getCollection()->transform(fn ($h) => [
+            'id'                => $h->id,
+            'title'             => (string) ($h->title ?? ''),
+            'description'       => (string) ($h->description ?? ''),
+            'due_date'          => optional($h->due_date)->toDateString() ?? '',
+            'status'            => 'published',
+            'subject'           => optional($h->subject)->name ?? '',
+            'class_name'        => optional(optional($h->section)->schoolClass)->name
+                                    ?? optional($h->section)->name
+                                    ?? '',
+            'submission_count'  => (int) ($h->submission_count ?? 0),
+            'total_students'    => $h->section
+                ? \App\Models\Enrollment::where('section_id', $h->section_id)
+                    ->where('status', 'active')->count()
+                : 0,
+        ]);
+
+        return response()->json($page);
     }
 
     /**

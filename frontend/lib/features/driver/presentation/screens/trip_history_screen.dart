@@ -1,6 +1,7 @@
 import 'package:first_try/core/widgets/shared/empty_state.dart';
 import 'package:first_try/core/widgets/shared/error_view.dart';
 import 'package:first_try/core/widgets/shared/loading_view.dart';
+import 'package:first_try/core/widgets/shared/skeletons.dart';
 import 'package:first_try/features/driver/data/models/driver_models.dart';
 import 'package:first_try/features/driver/presentation/cubit/trip_history_cubit.dart';
 import 'package:first_try/features/driver/presentation/cubit/trip_history_state.dart';
@@ -40,7 +41,7 @@ class TripHistoryScreen extends StatelessWidget {
                 builder: (context, state) {
                   if (state is TripHistoryLoading ||
                       state is TripHistoryInitial) {
-                    return const LoadingView();
+                    return const CardListSkeleton();
                   }
                   if (state is TripHistoryError) {
                     return ErrorView(

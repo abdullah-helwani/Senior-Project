@@ -1,6 +1,9 @@
+import 'package:first_try/core/theme/theme.dart';
 import 'package:first_try/core/widgets/shared/change_password_modal.dart';
 import 'package:first_try/core/widgets/shared/error_view.dart';
 import 'package:first_try/core/widgets/shared/loading_view.dart';
+import 'package:first_try/core/widgets/shared/profile_avatar_picker.dart';
+import 'package:first_try/core/widgets/ui/ui.dart';
 import 'package:first_try/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:first_try/features/student/data/models/student_models.dart';
 import 'package:first_try/features/student/presentation/cubit/student_profile_cubit.dart';
@@ -21,7 +24,8 @@ class StudentProfileScreen extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.w700)),
           ),
           body: switch (state) {
-            StudentProfileLoading() || StudentProfileInitial() =>
+            StudentProfileLoading() ||
+            StudentProfileInitial() =>
               const LoadingView(),
             StudentProfileError(:final message) => ErrorView(
                 message: message,
@@ -52,19 +56,7 @@ class _ProfileBody extends StatelessWidget {
         Center(
           child: Column(
             children: [
-              CircleAvatar(
-                radius: 44,
-                backgroundColor: cs.primaryContainer,
-                child: Text(
-                  profile.name.isNotEmpty
-                      ? profile.name[0].toUpperCase()
-                      : '?',
-                  style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w700,
-                      color: cs.onPrimaryContainer),
-                ),
-              ),
+              ProfileAvatarPicker(displayName: profile.name),
               const SizedBox(height: 12),
               Text(
                 profile.name,
@@ -135,19 +127,16 @@ class _ProfileBody extends StatelessWidget {
           style: OutlinedButton.styleFrom(
             minimumSize: const Size.fromHeight(48),
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
+                borderRadius: Radii.smRadius),
           ),
           onPressed: () => showChangePasswordModal(
             context,
             onSubmit: (current, next) async {
               try {
-                final repo = context.read<AuthCubit>();
-                // AuthCubit exposes changePassword via its repo
-                await (repo as dynamic)
-                    .repo
-                    .changePassword(
-                        currentPassword: current,
-                        newPassword: next);
+                await context.read<AuthCubit>().changePassword(
+                      currentPassword: current,
+                      newPassword: next,
+                    );
                 return null;
               } catch (e) {
                 return e.toString();
@@ -158,46 +147,34 @@ class _ProfileBody extends StatelessWidget {
         const SizedBox(height: 12),
 
         // Logout
-        FilledButton.icon(
-          icon: const Icon(Icons.logout_rounded),
-          label: const Text('Log Out'),
-          style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(48),
-            backgroundColor: Colors.red.shade600,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
+        SizedBox(
+          width: double.infinity,
+          child: AppButton.danger(
+            label: 'Log Out',
+            icon: Icons.logout_rounded,
+            onPressed: () => _confirmLogout(context),
           ),
-          onPressed: () => _confirmLogout(context),
         ),
         const SizedBox(height: 32),
       ],
     );
   }
 
-  void _confirmLogout(BuildContext context) {
-    showDialog(
+  void _confirmLogout(BuildContext context) async {
+    final confirmed = await showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Log Out'),
-        content: const Text('Are you sure you want to log out?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel')),
-          FilledButton(
-            style: FilledButton.styleFrom(
-                backgroundColor: Colors.red.shade600),
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.read<AuthCubit>().logout();
-            },
-            child: const Text('Log Out'),
-          ),
-        ],
-      ),
+      title: 'Log Out',
+      message: 'Are you sure you want to log out?',
+      confirmLabel: 'Log Out',
+      destructive: true,
     );
+    if (confirmed && context.mounted) {
+      context.read<AuthCubit>().logout();
+    }
   }
 }
+
+// ── Shared helpers ────────────────────────────────────────────────────────────
 
 class _SectionCard extends StatelessWidget {
   final String title;
@@ -207,12 +184,8 @@ class _SectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outlineVariant),
-      ),
+    return AppCard.surface(
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -240,23 +213,20 @@ class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
   const _InfoRow(
-      {required this.icon,
-      required this.label,
-      required this.value});
+      {required this.icon, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           Icon(icon, size: 18, color: cs.primary),
           const SizedBox(width: 12),
           Text(label,
-              style: TextStyle(
-                  fontSize: 13, color: cs.onSurfaceVariant)),
+              style:
+                  TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
           const Spacer(),
           Flexible(
             child: Text(

@@ -3,6 +3,7 @@ import 'package:first_try/core/api/api_interceptors.dart';
 import 'package:first_try/core/api/dio_consumer.dart';
 import 'package:first_try/core/router/route.dart';
 import 'package:first_try/core/services/storage_services.dart';
+import 'package:first_try/core/theme/app_theme.dart';
 import 'package:first_try/features/auth/data/repos/auth_repo.dart';
 import 'package:first_try/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:flutter/material.dart';
@@ -46,13 +47,9 @@ class _AppState extends State<_App> {
       routerConfig: _router,
       debugShowCheckedModeBanner: false,
       title: 'School App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF533483),
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.system,
     );
   }
 }

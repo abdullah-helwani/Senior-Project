@@ -26,16 +26,30 @@ class HomeworkCubit extends Cubit<HomeworkState> {
     }
   }
 
-  Future<void> submit(int hwId, String content) async {
+  /// Submits homework with an optional file attachment.
+  /// Returns true on success, false on failure (UI surfaces a snackbar).
+  Future<bool> submit({
+    required int hwId,
+    String? filePath,
+    List<int>? fileBytes,
+    String? fileName,
+  }) async {
     final s = state;
-    if (s is! HomeworkLoaded) return;
+    if (s is! HomeworkLoaded) return false;
     try {
-      await repo.submitHomework(hwId, content);
+      await repo.submitHomework(
+        hwId: hwId,
+        filePath: filePath,
+        fileBytes: fileBytes,
+        fileName: fileName,
+      );
       // Refresh list after submission
       final updated = await repo.getHomework();
       emit(HomeworkLoaded(homework: updated, statusFilter: s.statusFilter));
+      return true;
     } catch (_) {
-      // Optimistic update in UI — mark as submitted locally
+      // Optimistic local mark-as-submitted so the UI reflects the action
+      // even if the request failed (mock/offline mode).
       final updated = s.homework.map((h) {
         if (h.id == hwId) {
           return HomeworkModel(
@@ -46,12 +60,12 @@ class HomeworkCubit extends Cubit<HomeworkState> {
             teacherName: h.teacherName,
             status: 'submitted',
             description: h.description,
-            submittedContent: content,
           );
         }
         return h;
       }).toList();
       emit(s.copyWith(homework: updated));
+      return false;
     }
   }
 }

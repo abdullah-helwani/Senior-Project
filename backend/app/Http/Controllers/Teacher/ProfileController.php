@@ -32,10 +32,10 @@ class ProfileController extends Controller
             'hire_date'     => $teacher->hire_date,
             'status'        => $teacher->status,
             'assignments'   => $teacher->assignments->map(fn ($a) => [
-                'subject'     => $a->subject->name,
-                'section'     => $a->section->name,
-                'class'       => $a->section->schoolClass->name,
-                'school_year' => $a->section->schoolClass->schoolYear->name,
+                'subject'     => optional($a->subject)->name,
+                'section'     => optional($a->section)->name,
+                'class'       => optional(optional($a->section)->schoolClass)->name,
+                'school_year' => optional(optional(optional($a->section)->schoolClass)->schoolYear)->name,
             ]),
         ]);
     }

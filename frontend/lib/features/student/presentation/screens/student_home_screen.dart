@@ -1,4 +1,10 @@
-import 'package:first_try/core/widgets/shared/loading_view.dart';
+import 'package:dio/dio.dart';
+import 'package:first_try/core/api/dio_consumer.dart';
+import 'package:first_try/core/theme/theme.dart';
+import 'package:first_try/core/widgets/calendar/assessment_calendar_screen.dart';
+import 'package:first_try/core/widgets/ui/ui.dart';
+import 'package:first_try/features/auth/current_user.dart';
+import 'package:first_try/features/student/data/repos/student_repo.dart';
 import 'package:first_try/features/student/data/models/student_models.dart';
 import 'package:first_try/features/student/presentation/cubit/dashboard_cubit.dart';
 import 'package:first_try/features/student/presentation/cubit/dashboard_state.dart';
@@ -10,6 +16,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+// Student role gradient: blue → indigo
+const _kHeroGradient = [Color(0xFF3B82F6), Color(0xFF6366F1)];
+
 class StudentHomeScreen extends StatelessWidget {
   const StudentHomeScreen({super.key});
 
@@ -19,197 +28,209 @@ class StudentHomeScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: cs.surfaceContainerLowest,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () async {
-            context.read<DashboardCubit>().load();
-            context.read<ScheduleCubit>().load();
-            context.read<HomeworkCubit>().load();
-          },
-          child: CustomScrollView(
-            slivers: [
-              // ── Greeting header ──────────────────────────────────────────
-              SliverToBoxAdapter(
-                child: BlocBuilder<DashboardCubit, DashboardState>(
-                  builder: (context, state) {
-                    final name = state is DashboardLoaded
-                        ? state.dashboard.name.split(' ').first
-                        : '';
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Good ${_greeting()}'
-                                  '${name.isNotEmpty ? ', $name' : ''}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineSmall
-                                      ?.copyWith(
-                                          fontWeight: FontWeight.w700),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  DateFormat('EEEE, d MMMM y')
-                                      .format(DateTime.now()),
-                                  style: TextStyle(
-                                      fontSize: 13,
-                                      color: cs.onSurfaceVariant),
-                                ),
-                              ],
-                            ),
-                          ),
-                          CircleAvatar(
-                            backgroundColor: cs.primaryContainer,
-                            radius: 22,
-                            child: Icon(Icons.person_rounded,
-                                color: cs.onPrimaryContainer),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              // ── Stats row ────────────────────────────────────────────────
-              SliverToBoxAdapter(
-                child: BlocBuilder<DashboardCubit, DashboardState>(
-                  builder: (context, state) {
-                    if (state is DashboardLoading ||
-                        state is DashboardInitial) {
-                      return const SizedBox(
-                          height: 100, child: LoadingView());
-                    }
-                    if (state is! DashboardLoaded) {
-                      return const SizedBox.shrink();
-                    }
-                    final d = state.dashboard;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      child: Row(
-                        children: [
-                          _StatCard(
-                            icon: Icons.class_rounded,
-                            label: 'Classes\ntoday',
-                            value: '${d.todayClassesCount}',
-                            color: cs.primary,
-                          ),
-                          const SizedBox(width: 10),
-                          _StatCard(
-                            icon: Icons.assignment_rounded,
-                            label: 'Pending\nhomework',
-                            value: '${d.upcomingHomeworkCount}',
-                            color: Colors.orange.shade600,
-                          ),
-                          const SizedBox(width: 10),
-                          _StatCard(
-                            icon: Icons.bar_chart_rounded,
-                            label: 'Attendance',
-                            value:
-                                '${d.attendancePercent.toStringAsFixed(0)}%',
-                            color: Colors.green.shade600,
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              // ── Today's classes ──────────────────────────────────────────
-              SliverToBoxAdapter(
-                child: _SectionTitle(title: "Today's Classes"),
-              ),
-              SliverToBoxAdapter(
-                child: BlocBuilder<ScheduleCubit, ScheduleState>(
-                  builder: (context, state) {
-                    if (state is! ScheduleLoaded) {
-                      return const SizedBox(
-                          height: 80, child: LoadingView());
-                    }
-                    final slots = state.slotsForDay;
-                    if (slots.isEmpty) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        child: Text(
-                          'No classes today.',
-                          style:
-                              TextStyle(color: cs.onSurfaceVariant),
-                        ),
-                      );
-                    }
-                    return SizedBox(
-                      height: 110,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 4),
-                        itemCount: slots.length,
-                        separatorBuilder: (context, _) =>
-                            const SizedBox(width: 10),
-                        itemBuilder: (context, i) =>
-                            _ClassCard(slot: slots[i]),
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              // ── Upcoming homework ────────────────────────────────────────
-              SliverToBoxAdapter(
-                child: _SectionTitle(title: 'Upcoming Homework'),
-              ),
-              BlocBuilder<HomeworkCubit, HomeworkState>(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          context.read<DashboardCubit>().load();
+          context.read<ScheduleCubit>().load();
+          context.read<HomeworkCubit>().load();
+        },
+        child: CustomScrollView(
+          slivers: [
+            // ── Gradient hero ─────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: BlocBuilder<DashboardCubit, DashboardState>(
                 builder: (context, state) {
-                  if (state is! HomeworkLoaded) {
-                    return const SliverToBoxAdapter(
-                        child: SizedBox(
-                            height: 60, child: LoadingView()));
-                  }
-                  final pending = state.homework
-                      .where((h) =>
-                          h.status == 'pending' || h.status == 'late')
-                      .take(3)
-                      .toList();
-                  if (pending.isEmpty) {
-                    return SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        child: Text(
-                          'No pending homework.',
-                          style: TextStyle(
-                              color: cs.onSurfaceVariant),
-                        ),
+                  final name = state is DashboardLoaded
+                      ? state.dashboard.name.split(' ').first
+                      : '';
+                  return GradientHero(
+                    greeting:
+                        'Good ${_greeting()}${name.isNotEmpty ? ', $name' : ''}',
+                    subtitle:
+                        DateFormat('EEEE, d MMMM').format(DateTime.now()),
+                    colors: _kHeroGradient,
+                    trailing: Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.20),
+                        borderRadius: Radii.mdRadius,
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.30),
+                            width: 1),
                       ),
-                    );
-                  }
-                  return SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, i) =>
-                          _HomeworkTile(hw: pending[i]),
-                      childCount: pending.length,
+                      child: const Icon(Icons.school_rounded,
+                          color: Colors.white, size: 22),
                     ),
                   );
                 },
               ),
+            ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
-            ],
-          ),
+            // ── Stat cards ────────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: BlocBuilder<DashboardCubit, DashboardState>(
+                builder: (context, state) {
+                  final loaded = state is DashboardLoaded;
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: SkeletonSwitcher(
+                      isLoading: !loaded,
+                      skeleton: Row(children: [
+                        Expanded(child: Skeleton.card(height: 96)),
+                        const SizedBox(width: 10),
+                        Expanded(child: Skeleton.card(height: 96)),
+                        const SizedBox(width: 10),
+                        Expanded(child: Skeleton.card(height: 96)),
+                      ]),
+                      child: loaded
+                          ? Row(children: [
+                              _StatCard(
+                                icon: Icons.class_rounded,
+                                label: 'Classes\ntoday',
+                                value:
+                                    '${state.dashboard.todayClassesCount}',
+                                color: const Color(0xFF3B82F6),
+                              ),
+                              const SizedBox(width: 10),
+                              _StatCard(
+                                icon: Icons.assignment_rounded,
+                                label: 'Pending\nhomework',
+                                value:
+                                    '${state.dashboard.upcomingHomeworkCount}',
+                                color: const Color(0xFFF59E0B),
+                              ),
+                              const SizedBox(width: 10),
+                              _StatCard(
+                                icon: Icons.event_available_rounded,
+                                label: 'Attendance',
+                                value:
+                                    '${state.dashboard.attendancePercent.toStringAsFixed(0)}%',
+                                color: const Color(0xFF10B981),
+                              ),
+                            ])
+                          : const SizedBox.shrink(),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // ── Today's classes ───────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: SectionHeader(title: "Today's Classes"),
+            ),
+            SliverToBoxAdapter(
+              child: BlocBuilder<ScheduleCubit, ScheduleState>(
+                builder: (context, state) {
+                  if (state is! ScheduleLoaded) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(children: [
+                        ListTileSkeleton(),
+                        ListTileSkeleton(),
+                      ]),
+                    );
+                  }
+                  final slots = state.slotsForDay;
+                  if (slots.isEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 8),
+                      child: Text(
+                        'No classes scheduled today.',
+                        style:
+                            Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                      ),
+                    );
+                  }
+                  return SizedBox(
+                    height: 118,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 4),
+                      itemCount: slots.length,
+                      separatorBuilder: (_, _2) => const SizedBox(width: 10),
+                      itemBuilder: (_, i) => _ClassCard(slot: slots[i]),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // ── Upcoming homework ─────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: SectionHeader(title: 'Upcoming Homework'),
+            ),
+            BlocBuilder<HomeworkCubit, HomeworkState>(
+              builder: (context, state) {
+                if (state is! HomeworkLoaded) {
+                  return const SliverToBoxAdapter(
+                    child: Column(
+                        children: [ListTileSkeleton(), ListTileSkeleton()]),
+                  );
+                }
+                final pending = state.homework
+                    .where((h) => h.status == 'pending' || h.status == 'late')
+                    .take(3)
+                    .toList();
+                if (pending.isEmpty) {
+                  return SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 8),
+                      child: Text(
+                        'No pending homework — great job!',
+                        style:
+                            Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                      ),
+                    ),
+                  );
+                }
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (_, i) => Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: _HomeworkTile(hw: pending[i]),
+                    ),
+                    childCount: pending.length,
+                  ),
+                );
+              },
+            ),
+
+            // ── Calendar shortcut ─────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: _CalendarTile(),
+              ),
+            ),
+
+            // ── Bottom safe-area spacer ───────────────────────────────────
+            SliverToBoxAdapter(
+              child: Builder(
+                builder: (context) => SizedBox(
+                  height: MediaQuery.of(context).padding.bottom + 24,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  String _greeting() {
+  static String _greeting() {
     final h = DateTime.now().hour;
     if (h < 12) return 'morning';
     if (h < 17) return 'afternoon';
@@ -217,26 +238,7 @@ class StudentHomeScreen extends StatelessWidget {
   }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-class _SectionTitle extends StatelessWidget {
-  final String title;
-  const _SectionTitle({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-      child: Text(
-        title,
-        style: Theme.of(context)
-            .textTheme
-            .titleMedium
-            ?.copyWith(fontWeight: FontWeight.w700),
-      ),
-    );
-  }
-}
+// ── Widgets ───────────────────────────────────────────────────────────────────
 
 class _StatCard extends StatelessWidget {
   final IconData icon;
@@ -252,30 +254,35 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Container(
-        padding:
-            const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
-        ),
+      child: AppCard.filled(
+        color: color.withValues(alpha: 0.10),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.18),
+                borderRadius: Radii.smRadius,
+              ),
+              child: Icon(icon, color: color, size: 18),
+            ),
+            const SizedBox(height: 10),
             Text(
               value,
-              style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: color),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                  ),
             ),
             const SizedBox(height: 2),
-            Text(label,
-                style: TextStyle(
-                    fontSize: 11,
-                    color: color.withValues(alpha: 0.8))),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: color.withValues(alpha: 0.85),
+                  ),
+            ),
           ],
         ),
       ),
@@ -290,46 +297,40 @@ class _ClassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Container(
-      width: 130,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: cs.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            slot.subject,
-            style: const TextStyle(
-                fontWeight: FontWeight.w700, fontSize: 13),
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            slot.teacherName,
-            style:
-                TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
-            overflow: TextOverflow.ellipsis,
-          ),
-          const Spacer(),
-          Row(
-            children: [
-              Icon(Icons.access_time_rounded,
-                  size: 11, color: cs.primary),
+    return AppCard.surface(
+      padding: const EdgeInsets.all(14),
+      child: SizedBox(
+        width: 130,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              slot.subject,
+              style:
+                  const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              slot.teacherName,
+              style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+              overflow: TextOverflow.ellipsis,
+            ),
+            const Spacer(),
+            Row(children: [
+              const Icon(Icons.access_time_rounded,
+                  size: 11, color: Color(0xFF3B82F6)),
               const SizedBox(width: 3),
               Text(
                 slot.startTime,
-                style: TextStyle(
+                style: const TextStyle(
                     fontSize: 11,
-                    color: cs.primary,
+                    color: Color(0xFF3B82F6),
                     fontWeight: FontWeight.w600),
               ),
-            ],
-          ),
-        ],
+            ]),
+          ],
+        ),
       ),
     );
   }
@@ -343,71 +344,55 @@ class _HomeworkTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isLate = hw.status == 'late';
-    final dueColor =
-        isLate ? Colors.red.shade600 : cs.onSurfaceVariant;
-
-    return Container(
-      margin:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-            color: isLate
-                ? Colors.red.shade200
-                : cs.outlineVariant),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: cs.primaryContainer,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(Icons.assignment_rounded,
-                color: cs.onPrimaryContainer, size: 20),
+    return AppCard.surface(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color:
+                isLate ? Colors.red.shade50 : cs.primaryContainer,
+            borderRadius: Radii.smRadius,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  hw.title,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 13),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  hw.subject,
-                  style: TextStyle(
-                      fontSize: 12, color: cs.onSurfaceVariant),
-                ),
-              ],
-            ),
+          child: Icon(
+            Icons.assignment_rounded,
+            color: isLate ? Colors.red.shade600 : cs.onPrimaryContainer,
+            size: 20,
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Due',
-                  style: TextStyle(
-                      fontSize: 11, color: cs.onSurfaceVariant)),
               Text(
-                _fmtDate(hw.dueDate),
-                style: TextStyle(
-                    fontSize: 12,
-                    color: dueColor,
-                    fontWeight: FontWeight.w600),
+                hw.title,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600, fontSize: 13),
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                hw.subject,
+                style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
               ),
             ],
           ),
-        ],
-      ),
+        ),
+        Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Text('Due',
+              style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant)),
+          Text(
+            _fmtDate(hw.dueDate),
+            style: TextStyle(
+              fontSize: 12,
+              color: isLate ? Colors.red.shade600 : cs.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ]),
+      ]),
     );
   }
 
@@ -417,5 +402,54 @@ class _HomeworkTile extends StatelessWidget {
     } catch (_) {
       return iso;
     }
+  }
+}
+
+class _CalendarTile extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xFF3B82F6);
+    return AppCard.filled(
+      color: color.withValues(alpha: 0.08),
+      onTap: () {
+        final studentId = context.currentRoleId;
+        final repo =
+            StudentRepo(api: DioConsumer(dio: Dio()), studentId: studentId);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => AssessmentCalendarScreen(
+              title: 'Assessment Calendar',
+              fetcher: repo.getAssessmentCalendar,
+            ),
+          ),
+        );
+      },
+      child: Row(children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.15),
+            borderRadius: Radii.smRadius,
+          ),
+          child: const Icon(Icons.event_note_rounded, color: color, size: 22),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text(
+              'Assessment Calendar',
+              style: TextStyle(
+                  fontWeight: FontWeight.w800, fontSize: 14, color: color),
+            ),
+            Text(
+              'Upcoming exams, quizzes & homework',
+              style: TextStyle(
+                  fontSize: 12, color: color.withValues(alpha: 0.80)),
+            ),
+          ]),
+        ),
+        const Icon(Icons.chevron_right_rounded, color: color),
+      ]),
+    );
   }
 }

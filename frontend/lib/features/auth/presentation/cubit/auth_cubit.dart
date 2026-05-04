@@ -6,6 +6,7 @@ import 'package:first_try/features/auth/data/models/auth_model.dart';
 import 'package:first_try/features/auth/data/repos/auth_repo.dart';
 import 'package:first_try/features/auth/presentation/cubit/auth_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final AuthRepo _repo;
@@ -66,52 +67,27 @@ class AuthCubit extends Cubit<AuthState> {
         jsonEncode(response.user.toJson()),
       );
       emit(AuthAuthenticated(token: response.token, user: response.user));
-    } catch (_) {
-      // ── Mock login (used for UI testing when the backend is offline) ───────
-      final mockRole = _mockRoleFromEmail(email);
-      if (mockRole != null) {
-        const mockToken = 'mock-token';
-        final mockUser = UserModel(
-          id: 1,
-          name: _mockNameFromEmail(email),
-          email: email,
-          roleType: mockRole,
-        );
-        await StorageService.saveString(CacheKey.token, mockToken);
-        await StorageService.saveString(CacheKey.user, jsonEncode(mockUser.toJson()));
-        emit(AuthAuthenticated(token: mockToken, user: mockUser));
-        return;
+
+      // If login response lacked role_id (e.g. older backend cached in PHP
+      // memory), fetch /me to fill it in. /me returns the canonical shape
+      // and the interceptor will already have the new token attached.
+      if (response.user.roleId == null) {
+        try {
+          final fresh = await _repo.me();
+          if (fresh.roleId != null) {
+            await StorageService.saveString(
+              CacheKey.user,
+              jsonEncode(fresh.toJson()),
+            );
+            emit(AuthAuthenticated(token: response.token, user: fresh));
+          }
+        } catch (_) {
+          // /me failure isn't fatal — UI will use the (possibly null) roleId
+          // and currentRoleId will print a breadcrumb.
+        }
       }
-      emit(const AuthError(message: 'Login failed — check your credentials or your connection'));
-    }
-  }
-
-  String? _mockRoleFromEmail(String email) {
-    final e = email.toLowerCase().trim();
-    if (e == 'ali@school.test' || e == 'fatima@school.test') return 'student';
-    if (e == 'sara@school.test' || e == 'omar@school.test')  return 'teacher';
-    if (e == 'parent@school.test')                           return 'parent';
-    if (e.contains('student')) return 'student';
-    if (e.contains('driver'))  return 'driver';
-    if (e.contains('teacher')) return 'teacher';
-    if (e.contains('parent'))  return 'parent';
-    return null;
-  }
-
-  String _mockNameFromEmail(String email) {
-    final e = email.toLowerCase().trim();
-    if (e == 'ali@school.test')    return 'Ali Mohammed';
-    if (e == 'fatima@school.test') return 'Fatima Khalid';
-    if (e == 'sara@school.test')   return 'Sara Ahmed';
-    if (e == 'omar@school.test')   return 'Omar Hassan';
-    if (e == 'parent@school.test') return 'Mohammed Ali';
-    final role = _mockRoleFromEmail(email) ?? 'user';
-    switch (role) {
-      case 'student': return 'Student User';
-      case 'driver':  return 'Driver User';
-      case 'teacher': return 'Teacher User';
-      case 'parent':  return 'Parent User';
-      default:        return 'User';
+    } catch (e) {
+      emit(AuthError(message: 'Login failed: $e'));
     }
   }
 
@@ -131,5 +107,52 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> forceLogout() async {
     await StorageService.clearAll();
     emit(const AuthUnauthenticated());
+  }
+
+  /// Wraps the repo call so screens don't have to reach into the private
+  /// `_repo` field (which is brittle and hostile to refactoring).
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) =>
+      _repo.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+
+  /// Uploads a new avatar and updates the cached user with the returned path.
+  /// Returns true on success, false otherwise.
+  Future<bool> updateProfilePicture(XFile file) async {
+    final s = state;
+    if (s is! AuthAuthenticated) return false;
+    try {
+      final newPath = await _repo.updateProfilePicture(file);
+      final updated = s.user.copyWith(profilePicture: newPath);
+      await StorageService.saveString(
+        CacheKey.user,
+        jsonEncode(updated.toJson()),
+      );
+      emit(AuthAuthenticated(token: s.token, user: updated));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteProfilePicture() async {
+    final s = state;
+    if (s is! AuthAuthenticated) return false;
+    try {
+      await _repo.deleteProfilePicture();
+      final updated = s.user.copyWith(clearProfilePicture: true);
+      await StorageService.saveString(
+        CacheKey.user,
+        jsonEncode(updated.toJson()),
+      );
+      emit(AuthAuthenticated(token: s.token, user: updated));
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 }

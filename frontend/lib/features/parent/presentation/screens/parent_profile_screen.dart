@@ -1,3 +1,5 @@
+import 'package:first_try/core/widgets/shared/change_password_modal.dart';
+import 'package:first_try/core/widgets/shared/profile_avatar_picker.dart';
 import 'package:first_try/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:first_try/features/parent/data/models/parent_models.dart';
 import 'package:first_try/features/parent/presentation/cubit/parent_cubit.dart';
@@ -50,19 +52,7 @@ class _ProfileTab extends StatelessWidget {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: Column(children: [
-        // Avatar
-        CircleAvatar(
-          radius: 44,
-          backgroundColor: cs.primaryContainer,
-          child: Text(
-            profile.name[0],
-            style: TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.w800,
-              color: cs.onPrimaryContainer,
-            ),
-          ),
-        ),
+        ProfileAvatarPicker(displayName: profile.name),
         const SizedBox(height: 12),
         Text(profile.name,
             style:
@@ -109,13 +99,19 @@ class _ProfileTab extends StatelessWidget {
   }
 
   void _showChangePasswordSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => const _ChangePasswordSheet(),
+    showChangePasswordModal(
+      context,
+      onSubmit: (current, next) async {
+        try {
+          await context.read<AuthCubit>().changePassword(
+                currentPassword: current,
+                newPassword: next,
+              );
+          return null;
+        } catch (e) {
+          return e.toString();
+        }
+      },
     );
   }
 
@@ -139,123 +135,6 @@ class _ProfileTab extends StatelessWidget {
       ),
     );
   }
-}
-
-class _ChangePasswordSheet extends StatefulWidget {
-  const _ChangePasswordSheet();
-  @override
-  State<_ChangePasswordSheet> createState() => _ChangePasswordSheetState();
-}
-
-class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
-  final _formKey = GlobalKey<FormState>();
-  final _current = TextEditingController();
-  final _newPass = TextEditingController();
-  final _confirm = TextEditingController();
-  bool _obscure1 = true, _obscure2 = true, _obscure3 = true;
-
-  @override
-  void dispose() {
-    _current.dispose();
-    _newPass.dispose();
-    _confirm.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-          20, 12, 20, MediaQuery.of(context).viewInsets.bottom + 24),
-      child: Form(
-        key: _formKey,
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Container(
-            width: 40, height: 4,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.outlineVariant,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text('Change Password',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 20),
-          _PassField(
-            controller: _current,
-            label: 'Current Password',
-            obscure: _obscure1,
-            onToggle: () => setState(() => _obscure1 = !_obscure1),
-          ),
-          const SizedBox(height: 12),
-          _PassField(
-            controller: _newPass,
-            label: 'New Password',
-            obscure: _obscure2,
-            onToggle: () => setState(() => _obscure2 = !_obscure2),
-            validator: (v) => (v ?? '').length < 6 ? 'Min 6 characters' : null,
-          ),
-          const SizedBox(height: 12),
-          _PassField(
-            controller: _confirm,
-            label: 'Confirm New Password',
-            obscure: _obscure3,
-            onToggle: () => setState(() => _obscure3 = !_obscure3),
-            validator: (v) => v != _newPass.text ? 'Passwords do not match' : null,
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Password updated (demo)')),
-                  );
-                }
-              },
-              child: const Text('Update Password'),
-            ),
-          ),
-        ]),
-      ),
-    );
-  }
-}
-
-class _PassField extends StatelessWidget {
-  final TextEditingController controller;
-  final String label;
-  final bool obscure;
-  final VoidCallback onToggle;
-  final String? Function(String?)? validator;
-
-  const _PassField({
-    required this.controller,
-    required this.label,
-    required this.obscure,
-    required this.onToggle,
-    this.validator,
-  });
-
-  @override
-  Widget build(BuildContext context) => TextFormField(
-        controller: controller,
-        obscureText: obscure,
-        validator: validator,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          suffixIcon: IconButton(
-            icon: Icon(obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded),
-            onPressed: onToggle,
-          ),
-        ),
-      );
 }
 
 // ── Children tab ──────────────────────────────────────────────────────────────
