@@ -8,27 +8,37 @@ class TeacherDashboardCubit extends Cubit<TeacherDashboardState> {
   final TeacherRepo repo;
   TeacherDashboardCubit({required this.repo}) : super(TeacherDashboardInitial());
 
-  /// There's no dedicated `/dashboard` endpoint — we synthesize the dashboard
-  /// from `/teacher/{id}/profile` (name) plus the counts we can compute later
-  /// from schedule/notifications. For now counts default to 0; live counts can
-  /// be wired in by reading sibling cubit states from the home screen.
   Future<void> load() async {
     emit(TeacherDashboardLoading());
     try {
-      final profile = await repo.getProfile();
+      final results = await Future.wait([
+        repo.getProfile(),
+        repo.getSchedule(),
+      ]);
+      final profile = results[0] as TeacherProfileModel;
+      final slots   = results[1] as List<TeacherScheduleSlotModel>;
+
+      final todayKey = _todayKey();
+      final todayCount = slots
+          .where((s) => s.day.toLowerCase() == todayKey)
+          .length;
+
       emit(TeacherDashboardLoaded(
         TeacherDashboardModel(
           name: profile.name,
-          todayClassesCount: 0,
+          todayClassesCount: todayCount,
           pendingGradingCount: 0,
           unreadNotificationsCount: 0,
           totalStudents: 0,
         ),
       ));
     } catch (_) {
-      // Mock fallback for offline UI testing only — real auth sessions will
-      // hit the try branch above.
       emit(TeacherDashboardLoaded(TeacherMockData.dashboard));
     }
+  }
+
+  String _todayKey() {
+    const keys = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+    return keys[(DateTime.now().weekday - 1).clamp(0, 6)];
   }
 }

@@ -103,12 +103,12 @@ class TeacherScheduleSlotModel extends Equatable {
 
   factory TeacherScheduleSlotModel.fromJson(Map<String, dynamic> json) =>
       TeacherScheduleSlotModel(
-        id: (json['slot_id'] ?? json['id']) as int,
+        id: (json['slot_id'] ?? json['id'] ?? 0) as int,
         day: (json['day'] ?? json['dayofweek'] ?? '') as String,
         startTime: (json['start_time'] ?? json['starttime'] ?? '') as String,
         endTime: (json['end_time'] ?? json['endtime'] ?? '') as String,
-        className: json['class_name'] as String,
-        subject: json['subject'] as String,
+        className: (json['class_name'] ?? json['grade'] ?? json['section'] ?? '') as String,
+        subject: (json['subject'] ?? '') as String,
         order: (json['order'] as int?) ?? 0,
       );
 

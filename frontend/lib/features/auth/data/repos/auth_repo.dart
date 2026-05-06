@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:first_try/core/api/api_consumer.dart';
 import 'package:first_try/core/utils/app_url.dart';
 import 'package:first_try/features/auth/data/models/auth_model.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 
 class AuthRepo {
@@ -59,10 +60,13 @@ class AuthRepo {
   /// Uses [XFile.readAsBytes] so it works on Web and native alike.
   Future<String?> updateProfilePicture(XFile file) async {
     final bytes = await file.readAsBytes();
+    final mimeType = file.mimeType ?? 'image/jpeg';
+    final mimeParts = mimeType.split('/');
     final formData = FormData.fromMap({
       'profile_picture': MultipartFile.fromBytes(
         bytes,
         filename: file.name,
+        contentType: MediaType(mimeParts[0], mimeParts.length > 1 ? mimeParts[1] : 'jpeg'),
       ),
     });
     final response = await api.post(

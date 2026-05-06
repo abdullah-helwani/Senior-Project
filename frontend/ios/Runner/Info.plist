@@ -66,5 +66,12 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- Required by image_picker -->
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to let you take a profile photo.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs photo library access to let you choose a profile photo.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs microphone access when recording video.</string>
 </dict>
 </plist>

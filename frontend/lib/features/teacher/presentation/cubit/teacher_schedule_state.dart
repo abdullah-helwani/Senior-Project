@@ -20,7 +20,7 @@ class TeacherScheduleLoaded extends TeacherScheduleState {
       );
 
   List<TeacherScheduleSlotModel> get slotsForDay =>
-      slots.where((s) => s.day == selectedDay).toList()
+      slots.where((s) => s.day.toLowerCase() == selectedDay.toLowerCase()).toList()
         ..sort((a, b) => a.order.compareTo(b.order));
 
   @override List<Object?> get props => [slots, selectedDay];

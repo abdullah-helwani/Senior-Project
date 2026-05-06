@@ -39,8 +39,22 @@ class TeacherRepo {
 
   Future<List<TeacherScheduleSlotModel>> getSchedule() async {
     final res = await api.getApi(AppUrl.teacherSchedule(teacherId));
-    return _toList(res)
-        .map((s) => TeacherScheduleSlotModel.fromJson(s as Map<String, dynamic>))
+    final map = res as Map<String, dynamic>;
+    final schedule = (map['schedule'] as List<dynamic>?) ?? const [];
+    final allSlots = <Map<String, dynamic>>[];
+    for (final dayGroup in schedule) {
+      final dg = dayGroup as Map<String, dynamic>;
+      final day = dg['day'] as String;
+      final slots = (dg['slots'] as List<dynamic>?) ?? const [];
+      for (int i = 0; i < slots.length; i++) {
+        final slot = Map<String, dynamic>.from(slots[i] as Map<String, dynamic>);
+        slot['day'] = day;
+        slot['order'] = i;
+        allSlots.add(slot);
+      }
+    }
+    return allSlots
+        .map((s) => TeacherScheduleSlotModel.fromJson(s))
         .toList();
   }
 
@@ -458,12 +472,10 @@ class TeacherRepo {
   }
 
   // ── Legacy stubs kept for existing cubits ──────────────────────────────────
-  // Teacher notifications are not exposed by the backend.
+  // Teacher notifications are not exposed by the backend — return empty list.
   Future<List<TeacherNotificationModel>> getNotifications() async {
-    throw UnimplementedError('Teacher notification endpoint not available');
+    return const [];
   }
 
-  Future<void> markNotificationRead(int notificationId) async {
-    throw UnimplementedError('Teacher notification endpoint not available');
-  }
+  Future<void> markNotificationRead(int notificationId) async {}
 }
