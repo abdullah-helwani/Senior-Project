@@ -66,6 +66,7 @@ use App\Http\Controllers\Admin\TeacherAvailabilityController;
 use App\Http\Controllers\Admin\AnalyticsReportController;
 use App\Http\Controllers\Teacher\VacationRequestController as TeacherVacationRequestController;
 use App\Http\Controllers\Teacher\AvailabilityController as TeacherAvailabilityCtrl;
+use App\Http\Controllers\Teacher\NotificationController as TeacherNotificationController;
 use App\Http\Controllers\Driver\TripController as DriverTripController;
 use App\Http\Controllers\Driver\ProfileController as DriverProfileController;
 use App\Http\Controllers\Driver\TrackingController as DriverTrackingController;
@@ -87,6 +88,16 @@ use App\Http\Controllers\Webhook\StripeWebhookController;
 |--------------------------------------------------------------------------
 */
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+
+// Public proxy for stored profile pictures so CORS middleware applies (the
+// /storage/* path is served by the dev server directly, bypassing Laravel).
+Route::get('/media/profile-pictures/{userId}/{filename}', function ($userId, $filename) {
+    $path = "profile-pictures/{$userId}/{$filename}";
+    if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+        abort(404);
+    }
+    return response()->file(\Illuminate\Support\Facades\Storage::disk('public')->path($path));
+})->where('filename', '[A-Za-z0-9._-]+');
 
 /*
 |--------------------------------------------------------------------------
@@ -416,6 +427,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{teacherId}/availability',        [TeacherAvailabilityCtrl::class, 'store']);
         Route::put('/{teacherId}/availability/{id}',    [TeacherAvailabilityCtrl::class, 'update']);
         Route::delete('/{teacherId}/availability/{id}', [TeacherAvailabilityCtrl::class, 'destroy']);
+
+        // Notifications
+        Route::get('/{teacherId}/notifications',                    [TeacherNotificationController::class, 'index']);
+        Route::put('/{teacherId}/notifications/{recipientId}/read', [TeacherNotificationController::class, 'markRead']);
+        Route::put('/{teacherId}/notifications/read-all',           [TeacherNotificationController::class, 'markAllRead']);
     });
 
     /*

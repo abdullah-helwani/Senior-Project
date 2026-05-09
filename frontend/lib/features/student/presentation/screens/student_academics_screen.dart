@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:first_try/core/theme/theme.dart';
 import 'package:first_try/core/widgets/shared/error_view.dart';
 import 'package:first_try/core/widgets/shared/loading_view.dart';
@@ -1051,20 +1052,42 @@ class _SubmitHomeworkSheetState extends State<_SubmitHomeworkSheet> {
     final navigator = Navigator.of(context);
 
     setState(() => _busy = true);
-    final ok = await cubit.submit(
-      hwId: widget.hw.id,
-      filePath: _picked!.path,
-      fileBytes: _picked!.bytes,
-      fileName: _picked!.name,
-    );
+    bool ok = false;
+    String? errMsg;
+    // On Flutter Web, PlatformFile.path throws if accessed. Use bytes; fall
+    // back to path only when bytes are unavailable AND we're not on web.
+    final bytes = _picked!.bytes;
+    String? path;
+    if (bytes == null && !kIsWeb) {
+      path = _picked!.path;
+    }
+    try {
+      ok = await cubit.submit(
+        hwId: widget.hw.id,
+        filePath: path,
+        fileBytes: bytes,
+        fileName: _picked!.name,
+      );
+    } catch (e) {
+      errMsg = e.toString();
+    }
     if (!mounted) return;
     setState(() => _busy = false);
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(ok ? 'Homework submitted.' : 'Submission failed.'),
-      ),
-    );
-    if (ok) navigator.pop();
+    if (ok) {
+      navigator.pop();
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Homework submitted.')),
+      );
+    } else {
+      messenger.showSnackBar(
+        SnackBar(
+          duration: const Duration(seconds: 6),
+          content: Text(errMsg != null
+              ? 'Submission failed: $errMsg'
+              : 'Submission failed.'),
+        ),
+      );
+    }
   }
 
   @override

@@ -36,6 +36,7 @@ interface NotificationDetail {
 }
 
 interface Section { section_id: number; name: string; school_class?: { name: string } }
+interface RoleUser { id: number; name: string; email: string; role_type: string }
 
 export default function Notifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -50,6 +51,9 @@ export default function Notifications() {
   const [createLoading, setCreateLoading] = useState(false);
   const [form] = Form.useForm();
   const [targetMode, setTargetMode] = useState<'roles' | 'section'>('roles');
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [roleUsers, setRoleUsers] = useState<RoleUser[]>([]);
+  const [roleUsersLoading, setRoleUsersLoading] = useState(false);
 
   // Detail modal
   const [detailOpen, setDetailOpen] = useState(false);
@@ -78,6 +82,43 @@ export default function Notifications() {
 
   useEffect(() => { fetchSections(); }, []);
   useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
+
+  // When the selected roles change, fetch users in those roles for the picker.
+  useEffect(() => {
+    if (!createOpen || targetMode !== 'roles' || selectedRoles.length === 0) {
+      setRoleUsers([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setRoleUsersLoading(true);
+      try {
+        const results = await Promise.all(
+          selectedRoles.map((role) =>
+            api.get('/admin/users', {
+              params: { role_type: role, is_active: 'true', per_page: 1000 },
+            }),
+          ),
+        );
+        if (cancelled) return;
+        const merged: RoleUser[] = [];
+        const seen = new Set<number>();
+        for (const res of results) {
+          const list: RoleUser[] = res.data?.data ?? [];
+          for (const u of list) {
+            if (!seen.has(u.id)) { seen.add(u.id); merged.push(u); }
+          }
+        }
+        merged.sort((a, b) => a.name.localeCompare(b.name));
+        setRoleUsers(merged);
+      } catch {
+        if (!cancelled) message.error('Failed to load users for selected roles');
+      } finally {
+        if (!cancelled) setRoleUsersLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [createOpen, targetMode, selectedRoles]);
 
   const openDetail = async (id: number) => {
     setDetailLoading(true); setDetailOpen(true);
@@ -110,7 +151,12 @@ export default function Notifications() {
         payload.section_id = values.section_id;
         payload.include_parents = values.include_parents || false;
       } else {
-        payload.roles = values.roles;
+        const userIds = (values.user_ids as number[] | undefined) ?? [];
+        if (userIds.length > 0) {
+          payload.user_ids = userIds;
+        } else {
+          payload.roles = values.roles;
+        }
       }
       const res = await api.post('/admin/notifications', payload);
       message.success(`Notification sent to ${res.data.recipients_count} recipients`);
@@ -148,7 +194,7 @@ export default function Notifications() {
       <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
         <Col><Title level={4} style={{ margin: 0 }}>Notifications</Title></Col>
         <Col>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); setTargetMode('roles'); setCreateOpen(true); }}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); setTargetMode('roles'); setSelectedRoles([]); setRoleUsers([]); setCreateOpen(true); }}>
             Send Notification
           </Button>
         </Col>
@@ -173,7 +219,7 @@ export default function Notifications() {
       <Modal
         title="Send Notification"
         open={createOpen}
-        onCancel={() => { setCreateOpen(false); form.resetFields(); }}
+        onCancel={() => { setCreateOpen(false); form.resetFields(); setSelectedRoles([]); setRoleUsers([]); }}
         footer={null}
         width={500}
       >
@@ -193,13 +239,40 @@ export default function Notifications() {
           </Form.Item>
 
           {targetMode === 'roles' ? (
-            <Form.Item name="roles" label="Roles" rules={[{ required: true, message: 'Select at least one role' }]}>
-              <Select mode="multiple"
-                options={['admin', 'teacher', 'student', 'parent'].map((r) => ({
-                  value: r, label: r.charAt(0).toUpperCase() + r.slice(1),
-                }))}
-              />
-            </Form.Item>
+            <>
+              <Form.Item name="roles" label="Roles" rules={[{ required: true, message: 'Select at least one role' }]}>
+                <Select
+                  mode="multiple"
+                  onChange={(vals: string[]) => {
+                    setSelectedRoles(vals);
+                    form.setFieldsValue({ user_ids: [] });
+                  }}
+                  options={['admin', 'teacher', 'student', 'parent', 'driver'].map((r) => ({
+                    value: r, label: r.charAt(0).toUpperCase() + r.slice(1),
+                  }))}
+                />
+              </Form.Item>
+              <Form.Item
+                name="user_ids"
+                label="Specific Users"
+                tooltip="Leave empty to send to everyone in the selected role(s)."
+                extra={selectedRoles.length === 0 ? 'Select a role first to choose specific users.' : undefined}
+              >
+                <Select
+                  mode="multiple"
+                  allowClear
+                  showSearch
+                  placeholder={selectedRoles.length === 0 ? 'Pick a role above first' : 'All users in selected role(s)'}
+                  loading={roleUsersLoading}
+                  disabled={selectedRoles.length === 0}
+                  optionFilterProp="label"
+                  options={roleUsers.map((u) => ({
+                    value: u.id,
+                    label: `${u.name} (${u.role_type})`,
+                  }))}
+                />
+              </Form.Item>
+            </>
           ) : (
             <>
               <Form.Item name="section_id" label="Section" rules={[{ required: true }]}>

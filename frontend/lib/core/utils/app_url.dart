@@ -62,8 +62,12 @@ class AppUrl {
   // ── Teacher ─────────────────────────────────────────────────────────────────
   // Note: no /dashboard or /classes endpoint.
   // Teacher classes come from the /profile response (assignments field).
-  // Teacher notifications are not exposed — use the admin notification system.
   static String teacherProfile(int id)     => '$_api/teacher/$id/profile';
+  static String teacherNotifications(int id) => '$_api/teacher/$id/notifications';
+  static String teacherMarkNotificationRead(int id, int recipientId) =>
+      '$_api/teacher/$id/notifications/$recipientId/read';
+  static String teacherMarkAllNotificationsRead(int id) =>
+      '$_api/teacher/$id/notifications/read-all';
   static String teacherSchedule(int id)    => '$_api/teacher/$id/schedule';
   // Homework CRUD — GET list / POST new / GET one / PUT update / DELETE
   static String teacherHomework(int id)    => '$_api/teacher/$id/homework';

@@ -35,7 +35,11 @@ class HomeworkCubit extends Cubit<HomeworkState> {
     String? fileName,
   }) async {
     final s = state;
-    if (s is! HomeworkLoaded) return false;
+    if (s is! HomeworkLoaded) {
+      // ignore: avoid_print
+      print('[HomeworkCubit.submit] aborted — state is ${state.runtimeType}');
+      return false;
+    }
     try {
       await repo.submitHomework(
         hwId: hwId,
@@ -47,24 +51,11 @@ class HomeworkCubit extends Cubit<HomeworkState> {
       final updated = await repo.getHomework();
       emit(HomeworkLoaded(homework: updated, statusFilter: s.statusFilter));
       return true;
-    } catch (_) {
-      // Optimistic local mark-as-submitted so the UI reflects the action
-      // even if the request failed (mock/offline mode).
-      final updated = s.homework.map((h) {
-        if (h.id == hwId) {
-          return HomeworkModel(
-            id: h.id,
-            title: h.title,
-            subject: h.subject,
-            dueDate: h.dueDate,
-            teacherName: h.teacherName,
-            status: 'submitted',
-            description: h.description,
-          );
-        }
-        return h;
-      }).toList();
-      emit(s.copyWith(homework: updated));
+    } catch (e, st) {
+      // ignore: avoid_print
+      print('[HomeworkCubit.submit] failed: $e');
+      // ignore: avoid_print
+      print(st);
       return false;
     }
   }
