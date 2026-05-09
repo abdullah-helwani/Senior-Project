@@ -30,12 +30,12 @@ class Assessment extends Model
 
     public function subject()
     {
-        return $this->belongsTo(Subject::class);
+        return $this->belongsTo(Subject::class, 'subject_id', 'id');
     }
 
     public function section()
     {
-        return $this->belongsTo(Section::class)->with('schoolClass');
+        return $this->belongsTo(Section::class, 'section_id', 'section_id')->with('schoolClass');
     }
 
     public function createdBy()
