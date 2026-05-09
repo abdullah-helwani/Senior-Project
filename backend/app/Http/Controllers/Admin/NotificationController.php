@@ -87,7 +87,7 @@ class NotificationController extends Controller
             'user_ids'        => 'sometimes|array',
             'user_ids.*'      => 'integer|exists:users,id',
             'roles'           => 'sometimes|array',
-            'roles.*'         => 'in:admin,student,teacher,parent',
+            'roles.*'         => 'in:admin,student,teacher,parent,driver',
             'section_id'      => 'sometimes|integer',
             'include_parents' => 'sometimes|boolean',
         ]);

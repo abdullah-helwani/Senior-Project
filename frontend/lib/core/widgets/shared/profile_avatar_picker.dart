@@ -37,7 +37,10 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
       builder: (context, state) {
         final pic = state is AuthAuthenticated ? state.user.profilePicture : null;
         final hasPic = pic != null && pic.isNotEmpty;
-        final url = hasPic ? '$baseUrl/storage/$pic' : null;
+        // Route through /api/media/... so CORS middleware applies (Flutter Web
+        // canvas needs CORS headers; /storage/* is served by the dev server
+        // without going through Laravel middleware).
+        final url = hasPic ? '$baseUrl/api/media/$pic' : null;
 
         final avatar = CircleAvatar(
           radius: widget.radius,

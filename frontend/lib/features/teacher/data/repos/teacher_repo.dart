@@ -471,11 +471,20 @@ class TeacherRepo {
     await api.delete(AppUrl.teacherAvailabilityItem(teacherId, slotId));
   }
 
-  // ── Legacy stubs kept for existing cubits ──────────────────────────────────
-  // Teacher notifications are not exposed by the backend — return empty list.
+  // ── Notifications ──────────────────────────────────────────────────────────
   Future<List<TeacherNotificationModel>> getNotifications() async {
-    return const [];
+    final res = await api.getApi(AppUrl.teacherNotifications(teacherId));
+    return _toList(res)
+        .map((n) => TeacherNotificationModel.fromJson(n as Map<String, dynamic>))
+        .toList();
   }
 
-  Future<void> markNotificationRead(int notificationId) async {}
+  // recipientId = NotificationRecipient.recipient_id (NOT the notification id)
+  Future<void> markNotificationRead(int recipientId) async {
+    await api.put(AppUrl.teacherMarkNotificationRead(teacherId, recipientId));
+  }
+
+  Future<void> markAllNotificationsRead() async {
+    await api.put(AppUrl.teacherMarkAllNotificationsRead(teacherId));
+  }
 }
