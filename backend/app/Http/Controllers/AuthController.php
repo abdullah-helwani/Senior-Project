@@ -93,7 +93,7 @@ class AuthController extends Controller
         return match ($user->role_type) {
             'teacher' => optional($user->teacher)->id,
             'student' => optional($user->student)->id,
-            'parent'  => optional($user->guardian)->id,
+            'parent'  => optional($user->guardian)->parent_id,
             'driver'  => \App\Models\Driver::where('user_id', $user->id)->value('driver_id'),
             default   => null,
         };

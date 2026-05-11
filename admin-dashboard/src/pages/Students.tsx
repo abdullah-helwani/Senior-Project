@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   Table, Button, Input, Select, Tag, Space, Modal, Form,
-  message, Card, Typography, Row, Col, Descriptions, Badge,
+  message, Card, Typography, Row, Col, Descriptions, Badge, DatePicker, InputNumber,
 } from 'antd';
 import {
   PlusOutlined, SearchOutlined, EyeOutlined, EditOutlined, DeleteOutlined,
 } from '@ant-design/icons';
 import api from '../api/axios';
+import dayjs from 'dayjs';
 
 const { Title } = Typography;
 
@@ -84,10 +85,15 @@ export default function Students() {
 
   useEffect(() => { fetchStudents(); }, [fetchStudents]);
 
-  const handleCreate = async (values: Record<string, string>) => {
+  const handleCreate = async (values: Record<string, unknown>) => {
     setCreateLoading(true);
+    const payload = {
+      ...values,
+      date_of_birth: values.date_of_birth ? dayjs(values.date_of_birth as string).format('YYYY-MM-DD') : null,
+      enrollment_date: values.enrollment_date ? dayjs(values.enrollment_date as string).format('YYYY-MM-DD') : null,
+    };
     try {
-      await api.post('/admin/students', values);
+      await api.post('/admin/students', payload);
       message.success('Student created successfully');
       setCreateOpen(false);
       createForm.resetFields();
@@ -100,11 +106,15 @@ export default function Students() {
     }
   };
 
-  const handleEdit = async (values: Record<string, string>) => {
+  const handleEdit = async (values: Record<string, unknown>) => {
     if (!editingStudent) return;
     setEditLoading(true);
+    const payload = {
+      ...values,
+      date_of_birth: values.date_of_birth ? dayjs(values.date_of_birth as string).format('YYYY-MM-DD') : null,
+    };
     try {
-      await api.put(`/admin/students/${editingStudent.id}`, values);
+      await api.put(`/admin/students/${editingStudent.id}`, payload);
       message.success('Student updated successfully');
       setEditOpen(false);
       editForm.resetFields();
@@ -134,7 +144,7 @@ export default function Students() {
       name: student.user.name,
       email: student.user.email,
       phone: student.user.phone,
-      date_of_birth: student.date_of_birth,
+      date_of_birth: student.date_of_birth ? dayjs(student.date_of_birth) : null,
       gender: student.gender,
       address: student.address,
       graduation_year: student.graduation_year,
@@ -296,7 +306,7 @@ export default function Students() {
             </Col>
             <Col span={12}>
               <Form.Item name="date_of_birth" label="Date of Birth">
-                <Input type="date" />
+                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
               </Form.Item>
             </Col>
           </Row>
@@ -306,12 +316,12 @@ export default function Students() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="graduation_year" label="Graduation Year">
-                <Input type="number" />
+                <InputNumber style={{ width: '100%' }} min={2000} max={2100} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="enrollment_date" label="Enrollment Date">
-                <Input type="date" />
+                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
               </Form.Item>
             </Col>
           </Row>
@@ -352,7 +362,7 @@ export default function Students() {
             </Col>
             <Col span={12}>
               <Form.Item name="date_of_birth" label="Date of Birth">
-                <Input type="date" />
+                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
               </Form.Item>
             </Col>
           </Row>
@@ -362,7 +372,7 @@ export default function Students() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="graduation_year" label="Graduation Year">
-                <Input type="number" />
+                <InputNumber style={{ width: '100%' }} min={2000} max={2100} />
               </Form.Item>
             </Col>
             <Col span={12}>

@@ -348,6 +348,7 @@ export default function Parents() {
           pagination={{
             current: page, total, pageSize: 20, onChange: setPage,
             showTotal: (t) => `${t} parents`,
+            showSizeChanger: false,
           }}
           locale={{ emptyText: <Empty description="No parent accounts yet" /> }}
         />

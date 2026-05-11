@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   Table, Button, Select, Modal, Form, Input, InputNumber, message, Card,
-  Typography, Row, Col, Space, Tag, Statistic, Descriptions,
+  Typography, Row, Col, Space, Tag, Statistic, Descriptions, DatePicker,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, BarChartOutlined } from '@ant-design/icons';
 import api from '../api/axios';
@@ -28,15 +28,15 @@ interface Assessment {
 interface Result {
   result_id: number;
   student_id: number;
+  student_name?: string;
   score: number;
   grade: string;
-  student?: { id: number; user: { name: string } };
 }
 
 interface ResultsData {
   assessment: Assessment;
   results: Result[];
-  summary: { total_students: number; average_score: number; highest_score: number; lowest_score: number; pass_rate: number };
+  summary: { submitted: number; enrolled: number; average_score: number; highest_score: number; lowest_score: number; pass_rate: number };
 }
 
 interface Section { section_id: number; name: string; school_class?: { name: string } }
@@ -115,7 +115,7 @@ export default function Assessments() {
       section_id: a.section_id,
       createdbyteacherid: a.createdbyteacherid,
       assessmenttype: a.assessmenttype,
-      date: a.date,
+      date: a.date ? dayjs(a.date) : null,
       maxscore: a.maxscore,
     });
     setModalOpen(true);
@@ -123,12 +123,16 @@ export default function Assessments() {
 
   const handleSubmit = async (values: Record<string, unknown>) => {
     setModalLoading(true);
+    const payload = {
+      ...values,
+      date: values.date ? dayjs(values.date as string).format('YYYY-MM-DD') : null,
+    };
     try {
       if (editing) {
-        await api.put(`/admin/assessments/${editing.assessment_id}`, values);
+        await api.put(`/admin/assessments/${editing.assessment_id}`, payload);
         message.success('Assessment updated');
       } else {
-        await api.post('/admin/assessments', values);
+        await api.post('/admin/assessments', payload);
         message.success('Assessment created');
       }
       setModalOpen(false); form.resetFields(); setEditing(null); fetchAssessments();
@@ -265,7 +269,7 @@ export default function Assessments() {
       <Card>
         <Table
           dataSource={assessments} columns={columns} rowKey="assessment_id" loading={loading}
-          pagination={{ current: page, total, pageSize: 15, onChange: setPage, showTotal: (t) => `${t} assessments` }}
+          pagination={{ current: page, total, pageSize: 15, onChange: setPage, showTotal: (t) => `${t} assessments`, showSizeChanger: false }}
           size="small"
         />
       </Card>
@@ -284,7 +288,7 @@ export default function Assessments() {
             </Col>
             <Col span={12}>
               <Form.Item name="date" label="Date" rules={[{ required: true }]}>
-                <Input type="date" />
+                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
               </Form.Item>
             </Col>
           </Row>
@@ -332,7 +336,7 @@ export default function Assessments() {
             </Descriptions>
 
             <Row gutter={16} style={{ marginBottom: 16 }}>
-              <Col span={6}><Card size="small"><Statistic title="Students" value={resultsData.summary.total_students} /></Card></Col>
+              <Col span={6}><Card size="small"><Statistic title="Submitted / Enrolled" value={`${resultsData.summary.submitted} / ${resultsData.summary.enrolled}`} /></Card></Col>
               <Col span={6}><Card size="small"><Statistic title="Average" value={resultsData.summary.average_score} precision={1} /></Card></Col>
               <Col span={6}><Card size="small"><Statistic title="Highest" value={resultsData.summary.highest_score} /></Card></Col>
               <Col span={6}><Card size="small"><Statistic title="Pass Rate" value={resultsData.summary.pass_rate} suffix="%" /></Card></Col>
@@ -341,7 +345,7 @@ export default function Assessments() {
             <Table
               dataSource={resultsData.results} rowKey="result_id" pagination={false} size="small"
               columns={[
-                { title: 'Student', key: 'student', render: (_: unknown, r: Result) => r.student?.user?.name || '—' },
+                { title: 'Student', key: 'student', render: (_: unknown, r: Result) => r.student_name || '—' },
                 { title: 'Score', dataIndex: 'score', width: 80 },
                 { title: 'Grade', dataIndex: 'grade', width: 80, render: (g: string) => <Tag>{g}</Tag> },
                 {

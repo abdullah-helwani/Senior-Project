@@ -159,7 +159,7 @@ export default function TeacherAvailability() {
 
       <Card>
         <Table size="small" loading={loading} dataSource={slots} rowKey="availability_id" columns={columns}
-          pagination={{ current: page, total, pageSize: 50, onChange: setPage, showTotal: (t) => `${t} slots` }}
+          pagination={{ current: page, total, pageSize: 50, onChange: setPage, showTotal: (t) => `${t} slots`, showSizeChanger: false }}
         />
       </Card>
 

@@ -205,7 +205,7 @@ export default function Payments() {
       <Card>
         <Table
           dataSource={payments} columns={columns} rowKey="payment_id" loading={loading}
-          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} payments` }}
+          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} payments`, showSizeChanger: false }}
           size="small"
         />
       </Card>
@@ -256,7 +256,7 @@ export default function Payments() {
             </Col>
           </Row>
           <Form.Item name="paidat" label="Paid At (optional — defaults to now)">
-            <Input type="datetime-local" />
+            <DatePicker showTime style={{ width: '100%' }} format="DD/MM/YYYY HH:mm" placeholder="DD/MM/YYYY HH:mm" />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={modalLoading} block>Record Payment</Button>

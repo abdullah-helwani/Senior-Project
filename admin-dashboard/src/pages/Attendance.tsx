@@ -178,7 +178,7 @@ export default function Attendance() {
       <Card>
         <Table
           dataSource={sessions} columns={columns} rowKey="session_id" loading={loading}
-          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} sessions` }}
+          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} sessions`, showSizeChanger: false }}
           size="small"
         />
       </Card>

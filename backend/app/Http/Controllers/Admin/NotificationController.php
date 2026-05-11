@@ -83,6 +83,7 @@ class NotificationController extends Controller
     {
         $request->validate([
             'title'           => 'required|string|max:255',
+            'body'            => 'nullable|string',
             'channel'         => 'required|string|max:50',
             'user_ids'        => 'sometimes|array',
             'user_ids.*'      => 'integer|exists:users,id',
@@ -94,10 +95,11 @@ class NotificationController extends Controller
 
         $notification = DB::transaction(function () use ($request) {
             $notification = Notification::create([
-                'title'          => $request->title,
+                'title'           => $request->title,
+                'body'            => $request->body ?? null,
                 'createdbyuserid' => $request->user()->id,
-                'channel'        => $request->channel,
-                'created_at'     => now(),
+                'channel'         => $request->channel,
+                'created_at'      => now(),
             ]);
 
             $userIds = collect();

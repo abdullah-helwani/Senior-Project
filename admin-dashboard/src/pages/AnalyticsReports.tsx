@@ -143,12 +143,12 @@ function SavedReportsTab() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="periodstart" label="Period Start" rules={[{ required: true }]}>
-                <input type="date" style={{ width: '100%', padding: 4 }} />
+                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="periodend" label="Period End" rules={[{ required: true }]}>
-                <input type="date" style={{ width: '100%', padding: 4 }} />
+                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
               </Form.Item>
             </Col>
           </Row>

@@ -146,7 +146,7 @@ export default function FeePlans() {
       <Card>
         <Table
           dataSource={plans} columns={columns} rowKey="feeplan_id" loading={loading}
-          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} plans` }}
+          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} plans`, showSizeChanger: false }}
           size="small"
         />
       </Card>

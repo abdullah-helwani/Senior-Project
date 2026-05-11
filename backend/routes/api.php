@@ -87,7 +87,7 @@ use App\Http\Controllers\Webhook\StripeWebhookController;
 | Auth Routes (public)
 |--------------------------------------------------------------------------
 */
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:60,1');
 
 // Public proxy for stored profile pictures so CORS middleware applies (the
 // /storage/* path is served by the dev server directly, bypassing Laravel).

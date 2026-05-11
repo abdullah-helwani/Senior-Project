@@ -135,6 +135,11 @@ class AssessmentController extends Controller
                 ];
             });
 
+        $enrolledCount = \DB::table('enrollment')
+            ->where('section_id', $assessment->section_id)
+            ->where('status', 'active')
+            ->count();
+
         return response()->json([
             'assessment' => [
                 'id'             => $assessment->assessment_id,
@@ -148,7 +153,8 @@ class AssessmentController extends Controller
             ],
             'results' => $results,
             'summary' => [
-                'total_students' => $results->count(),
+                'submitted'      => $results->count(),
+                'enrolled'       => $enrolledCount,
                 'average_score'  => round($results->avg('score'), 2),
                 'highest_score'  => $results->max('score'),
                 'lowest_score'   => $results->min('score'),

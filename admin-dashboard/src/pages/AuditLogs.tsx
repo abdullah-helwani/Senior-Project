@@ -147,7 +147,7 @@ export default function AuditLogs() {
 
       <Card>
         <Table size="small" loading={loading} dataSource={logs} rowKey="id" columns={columns}
-          pagination={{ current: page, total, pageSize: 30, onChange: setPage, showTotal: (t) => `${t} logs` }}
+          pagination={{ current: page, total, pageSize: 30, onChange: setPage, showTotal: (t) => `${t} logs`, showSizeChanger: false }}
         />
       </Card>
 

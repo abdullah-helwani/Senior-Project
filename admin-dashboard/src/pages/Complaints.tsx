@@ -124,7 +124,7 @@ export default function Complaints() {
       <Card>
         <Table
           dataSource={complaints} columns={columns} rowKey="complaint_id" loading={loading}
-          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} complaints` }}
+          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} complaints`, showSizeChanger: false }}
           size="small"
         />
       </Card>

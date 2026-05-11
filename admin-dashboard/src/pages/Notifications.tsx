@@ -14,6 +14,7 @@ const READ_COLOR: Record<string, string> = { read: 'green', unread: 'orange', de
 interface Notification {
   notification_id: number;
   title: string;
+  body?: string | null;
   createdbyuserid: number;
   channel: string;
   created_at: string;
@@ -146,7 +147,7 @@ export default function Notifications() {
   const handleCreate = async (values: Record<string, unknown>) => {
     setCreateLoading(true);
     try {
-      const payload: Record<string, unknown> = { title: values.title, channel: values.channel };
+      const payload: Record<string, unknown> = { title: values.title, body: values.body || null, channel: values.channel };
       if (targetMode === 'section') {
         payload.section_id = values.section_id;
         payload.include_parents = values.include_parents || false;
@@ -210,7 +211,7 @@ export default function Notifications() {
       <Card>
         <Table
           dataSource={notifications} columns={columns} rowKey="notification_id" loading={loading}
-          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} notifications` }}
+          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} notifications`, showSizeChanger: false }}
           size="small"
         />
       </Card>
@@ -226,6 +227,9 @@ export default function Notifications() {
         <Form form={form} layout="vertical" onFinish={handleCreate}>
           <Form.Item name="title" label="Title" rules={[{ required: true }]}>
             <Input placeholder="Notification title..." />
+          </Form.Item>
+          <Form.Item name="body" label="Description" tooltip="Optional — provides more detail inside the notification message">
+            <Input.TextArea rows={3} placeholder="Add a description or message body (optional)..." />
           </Form.Item>
           <Form.Item name="channel" label="Channel" rules={[{ required: true }]}>
             <Select options={['app', 'email', 'sms', 'push'].map((c) => ({ value: c, label: c.toUpperCase() }))} />
@@ -300,6 +304,11 @@ export default function Notifications() {
           <>
             <Descriptions column={2} bordered size="small" style={{ marginBottom: 16 }}>
               <Descriptions.Item label="Title" span={2}>{detail.notification.title}</Descriptions.Item>
+              {detail.notification.body && (
+                <Descriptions.Item label="Description" span={2}>
+                  <span style={{ whiteSpace: 'pre-wrap' }}>{detail.notification.body}</span>
+                </Descriptions.Item>
+              )}
               <Descriptions.Item label="Channel"><Tag>{detail.notification.channel}</Tag></Descriptions.Item>
               <Descriptions.Item label="Sent">{dayjs(detail.notification.created_at).format('YYYY-MM-DD HH:mm')}</Descriptions.Item>
               <Descriptions.Item label="Sent By">{detail.notification.createdBy?.name || `#${detail.notification.createdbyuserid}`}</Descriptions.Item>

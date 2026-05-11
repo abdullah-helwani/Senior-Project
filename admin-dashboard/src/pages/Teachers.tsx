@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   Table, Button, Input, Select, Tag, Space, Modal, Form,
-  message, Card, Typography, Row, Col, Descriptions, Badge,
+  message, Card, Typography, Row, Col, Descriptions, Badge, DatePicker,
 } from 'antd';
 import {
   PlusOutlined, SearchOutlined, EyeOutlined, EditOutlined, DeleteOutlined,
 } from '@ant-design/icons';
 import api from '../api/axios';
+import dayjs from 'dayjs';
 
 const { Title } = Typography;
 
@@ -74,10 +75,15 @@ export default function Teachers() {
 
   useEffect(() => { fetchTeachers(); }, [fetchTeachers]);
 
-  const handleCreate = async (values: Record<string, string>) => {
+  const handleCreate = async (values: Record<string, unknown>) => {
     setCreateLoading(true);
+    const payload = {
+      ...values,
+      date_of_birth: values.date_of_birth ? dayjs(values.date_of_birth as string).format('YYYY-MM-DD') : null,
+      hire_date: values.hire_date ? dayjs(values.hire_date as string).format('YYYY-MM-DD') : null,
+    };
     try {
-      await api.post('/admin/teachers', values);
+      await api.post('/admin/teachers', payload);
       message.success('Teacher created successfully');
       setCreateOpen(false);
       createForm.resetFields();
@@ -90,11 +96,16 @@ export default function Teachers() {
     }
   };
 
-  const handleEdit = async (values: Record<string, string>) => {
+  const handleEdit = async (values: Record<string, unknown>) => {
     if (!editingTeacher) return;
     setEditLoading(true);
+    const payload = {
+      ...values,
+      date_of_birth: values.date_of_birth ? dayjs(values.date_of_birth as string).format('YYYY-MM-DD') : null,
+      hire_date: values.hire_date ? dayjs(values.hire_date as string).format('YYYY-MM-DD') : null,
+    };
     try {
-      await api.put(`/admin/teachers/${editingTeacher.id}`, values);
+      await api.put(`/admin/teachers/${editingTeacher.id}`, payload);
       message.success('Teacher updated successfully');
       setEditOpen(false);
       editForm.resetFields();
@@ -124,10 +135,10 @@ export default function Teachers() {
       name: teacher.user.name,
       email: teacher.user.email,
       phone: teacher.user.phone,
-      date_of_birth: teacher.date_of_birth,
+      date_of_birth: teacher.date_of_birth ? dayjs(teacher.date_of_birth) : null,
       gender: teacher.gender,
       address: teacher.address,
-      hire_date: teacher.hire_date,
+      hire_date: teacher.hire_date ? dayjs(teacher.hire_date) : null,
       status: teacher.status,
     });
     setEditOpen(true);
@@ -172,7 +183,7 @@ export default function Teachers() {
       title: 'Hire Date',
       dataIndex: 'hire_date',
       key: 'hire_date',
-      render: (d: string | null) => d ? new Date(d).toLocaleDateString() : '—',
+      render: (d: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
     },
     {
       title: 'Actions',
@@ -283,7 +294,7 @@ export default function Teachers() {
             </Col>
             <Col span={12}>
               <Form.Item name="date_of_birth" label="Date of Birth">
-                <Input type="date" />
+                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
               </Form.Item>
             </Col>
           </Row>
@@ -291,7 +302,7 @@ export default function Teachers() {
             <Input />
           </Form.Item>
           <Form.Item name="hire_date" label="Hire Date">
-            <Input type="date" />
+            <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={createLoading} block>
@@ -330,7 +341,7 @@ export default function Teachers() {
             </Col>
             <Col span={12}>
               <Form.Item name="date_of_birth" label="Date of Birth">
-                <Input type="date" />
+                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
               </Form.Item>
             </Col>
           </Row>
@@ -340,7 +351,7 @@ export default function Teachers() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="hire_date" label="Hire Date">
-                <Input type="date" />
+                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
               </Form.Item>
             </Col>
             <Col span={12}>

@@ -162,7 +162,7 @@ export default function BehaviorLogs() {
       <Card>
         <Table
           dataSource={logs} columns={columns} rowKey="log_id" loading={loading}
-          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} logs` }}
+          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} logs`, showSizeChanger: false }}
           size="small"
         />
       </Card>

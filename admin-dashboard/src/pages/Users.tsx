@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   Table, Button, Input, Select, Tag, Space, Modal, Form,
-  message, Popconfirm, Card, Typography, Row, Col, Badge,
+  message, Popconfirm, Card, Typography, Row, Col, Badge, DatePicker,
 } from 'antd';
 import {
   PlusOutlined, SearchOutlined, LockOutlined,
@@ -182,7 +182,7 @@ export default function Users() {
       title: 'Joined',
       dataIndex: 'created_at',
       key: 'created_at',
-      render: (d: string) => new Date(d).toLocaleDateString(),
+      render: (d: string) => new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
     },
     {
       title: 'Actions',
@@ -321,7 +321,7 @@ export default function Users() {
             />
           </Form.Item>
           <Form.Item name="date_of_birth" label="Date of Birth">
-            <Input type="date" />
+            <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
           </Form.Item>
           <Form.Item name="address" label="Address">
             <Input />

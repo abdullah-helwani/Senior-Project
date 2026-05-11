@@ -172,7 +172,7 @@ export default function StudentFeePlans() {
       <Card>
         <Table
           dataSource={accounts} columns={columns} rowKey="account_id" loading={loading}
-          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} accounts` }}
+          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} accounts`, showSizeChanger: false }}
           size="small"
         />
       </Card>

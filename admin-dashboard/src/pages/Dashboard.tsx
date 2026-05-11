@@ -85,7 +85,7 @@ const complaintColumns = [
     title: 'Date',
     dataIndex: 'created_at',
     key: 'created_at',
-    render: (d: string) => new Date(d).toLocaleDateString(),
+    render: (d: string) => new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
   },
 ];
 

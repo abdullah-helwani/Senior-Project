@@ -139,7 +139,7 @@ export default function Cameras() {
       <Card>
         <Table
           dataSource={cameras} columns={columns} rowKey="camera_id" loading={loading}
-          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} cameras` }}
+          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} cameras`, showSizeChanger: false }}
           size="small"
         />
       </Card>

@@ -212,7 +212,7 @@ export default function Invoices() {
       <Card>
         <Table
           dataSource={invoices} columns={columns} rowKey="invoice_id" loading={loading}
-          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} invoices` }}
+          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} invoices`, showSizeChanger: false }}
           size="small"
         />
       </Card>
@@ -233,7 +233,7 @@ export default function Invoices() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="due_date" label="Due Date" rules={[{ required: true }]}>
-                <Input type="date" />
+                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
               </Form.Item>
             </Col>
             <Col span={12}>

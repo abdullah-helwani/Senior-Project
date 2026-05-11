@@ -235,40 +235,42 @@ export default function Layout() {
           )}
         </div>
 
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          openKeys={openKeys}
-          onOpenChange={(keys) => setOpenKeys(keys as string[])}
-          items={menuItems}
-          onClick={({ key }) => navigate(String(key))}
-          style={{ borderRight: 0, padding: '8px 10px' }}
-        />
-
-        {!collapsed && (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 12,
-              left: 12,
-              right: 12,
-              padding: 12,
-              borderRadius: 10,
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.06)',
-              color: 'rgba(255,255,255,0.75)',
-              fontSize: 12,
-              lineHeight: 1.5,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              <SettingOutlined />
-              <span style={{ fontWeight: 600 }}>Admin Build</span>
-            </div>
-            <div style={{ color: 'rgba(255,255,255,0.45)' }}>v1.0 · School Management Suite</div>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 64px)' }}>
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            <Menu
+              theme="dark"
+              mode="inline"
+              selectedKeys={[selectedKey]}
+              openKeys={openKeys}
+              onOpenChange={(keys) => setOpenKeys(keys as string[])}
+              items={menuItems}
+              onClick={({ key }) => navigate(String(key))}
+              style={{ borderRight: 0, padding: '8px 10px' }}
+            />
           </div>
-        )}
+
+          {!collapsed && (
+            <div
+              style={{
+                margin: 12,
+                padding: 12,
+                borderRadius: 10,
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                color: 'rgba(255,255,255,0.75)',
+                fontSize: 12,
+                lineHeight: 1.5,
+                flexShrink: 0,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                <SettingOutlined />
+                <span style={{ fontWeight: 600 }}>Admin Build</span>
+              </div>
+              <div style={{ color: 'rgba(255,255,255,0.45)' }}>v1.0 · School Management Suite</div>
+            </div>
+          )}
+        </div>
       </Sider>
 
       <AntLayout

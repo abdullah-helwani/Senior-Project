@@ -202,7 +202,7 @@ export default function SurveillanceEvents() {
       <Card>
         <Table
           dataSource={events} columns={columns} rowKey="survevent_id" loading={loading}
-          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} events` }}
+          pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} events`, showSizeChanger: false }}
           size="small"
         />
       </Card>
