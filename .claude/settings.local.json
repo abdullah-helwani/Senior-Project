@@ -12,7 +12,14 @@
       "Read(//c/c/Users/ASUS/Desktop/Senior-Project/frontend/android/**)",
       "Read(//c/c/Users/ASUS/Desktop/Senior-Project/frontend/android/app/**)",
       "Bash(dart analyze *)",
-      "Bash(xargs grep *)"
+      "Bash(xargs grep *)",
+      "Bash(php artisan *)",
+      "PowerShell(pip config list)",
+      "PowerShell($env:HTTPS_PROXY)",
+      "PowerShell($env:HTTP_PROXY)",
+      "PowerShell($env:HTTPS_PROXY = \"\"; $env:HTTP_PROXY = \"\"; pip install -r \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\Senior-Project\\\\KIRA\\\\FIGHT DETECTION\\\\requirements.txt\" 2>&1 | Select-Object -Last 20)",
+      "Bash(Get-Content \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\Senior-Project\\\\backend\\\\storage\\\\logs\\\\laravel.log\" -Tail 30)",
+      "PowerShell(\\(Get-Content \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\Senior-Project\\\\backend\\\\storage\\\\logs\\\\laravel.log\" -Raw\\) -split '\\\\[20' | Select-Object -Last 3 | ForEach-Object { \"[20\" + $_ } | Select-Object -First 2)"
     ]
   }
 }

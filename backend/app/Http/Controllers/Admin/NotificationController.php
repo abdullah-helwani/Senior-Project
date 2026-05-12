@@ -163,6 +163,68 @@ class NotificationController extends Controller
     }
 
     /**
+     * GET /admin/notifications/alerts
+     *
+     * Return the authenticated admin's unread alert-channel notifications
+     * (used by the header bell). Returns up to 20 items + total unread count.
+     */
+    public function myAlerts(Request $request)
+    {
+        $userId = $request->user()->id;
+
+        $recipients = NotificationRecipient::where('user_id', $userId)
+            ->where('status', 'unread')
+            ->whereHas('notification', fn ($q) => $q->where('channel', 'alert'))
+            ->with('notification')
+            ->orderByDesc('deliveredat')
+            ->limit(20)
+            ->get();
+
+        return response()->json([
+            'unread_count' => $recipients->count(),
+            'items'        => $recipients->map(fn ($r) => [
+                'recipient_id'    => $r->recipient_id,
+                'notification_id' => $r->notification_id,
+                'title'           => $r->notification->title,
+                'body'            => $r->notification->body,
+                'created_at'      => $r->notification->created_at,
+                'status'          => $r->status,
+            ]),
+        ]);
+    }
+
+    /**
+     * PUT /admin/notifications/alerts/{recipientId}/read
+     *
+     * Mark one alert recipient record as read.
+     */
+    public function markOneRead(Request $request, int $recipientId)
+    {
+        $recipient = NotificationRecipient::where('recipient_id', $recipientId)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
+        $recipient->update(['status' => 'read', 'readat' => now()]);
+
+        return response()->json(['message' => 'Marked as read.']);
+    }
+
+    /**
+     * PUT /admin/notifications/alerts/read-all
+     *
+     * Mark ALL unread alerts as read for the authenticated admin.
+     */
+    public function markAllAlertsRead(Request $request)
+    {
+        NotificationRecipient::where('user_id', $request->user()->id)
+            ->where('status', 'unread')
+            ->whereHas('notification', fn ($q) => $q->where('channel', 'alert'))
+            ->update(['status' => 'read', 'readat' => now()]);
+
+        return response()->json(['message' => 'All alerts marked as read.']);
+    }
+
+    /**
      * DELETE /admin/notifications/{id}
      *
      * Delete a notification and all its recipients.

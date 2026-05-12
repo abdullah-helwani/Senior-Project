@@ -74,9 +74,11 @@ use App\Http\Controllers\Driver\StopEventController as DriverStopEventController
 use App\Http\Controllers\Student\BusController as StudentBusController;
 use App\Http\Controllers\Admin\ExportController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\AiCameraController;
 use App\Http\Controllers\Admin\CameraController;
 use App\Http\Controllers\Admin\SurveillanceEventController;
 use App\Http\Controllers\Ai\SurveillanceController as AiSurveillanceController;
+use App\Http\Controllers\Webhook\FightAlertWebhookController;
 use App\Http\Controllers\Admin\ReportCardController;
 use App\Http\Controllers\AssessmentCalendarController;
 use App\Http\Controllers\ParentControllers\StripeController;
@@ -105,6 +107,7 @@ Route::get('/media/profile-pictures/{userId}/{filename}', function ($userId, $fi
 |--------------------------------------------------------------------------
 */
 Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle']);
+Route::post('/webhooks/fight-alert', [FightAlertWebhookController::class, 'handle']);
 
 /*
 |--------------------------------------------------------------------------
@@ -214,10 +217,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/behavior-logs/{id}', [AdminBehaviorLogController::class, 'destroy']);
 
         // Notifications — broadcast + manage
-        Route::get('/notifications',      [AdminNotificationController::class, 'index']);
-        Route::post('/notifications',     [AdminNotificationController::class, 'store']);
-        Route::get('/notifications/{id}', [AdminNotificationController::class, 'show']);
-        Route::delete('/notifications/{id}', [AdminNotificationController::class, 'destroy']);
+        Route::get('/notifications',                                    [AdminNotificationController::class, 'index']);
+        Route::post('/notifications',                                   [AdminNotificationController::class, 'store']);
+        Route::get('/notifications/alerts',                             [AdminNotificationController::class, 'myAlerts']);
+        Route::put('/notifications/alerts/read-all',                    [AdminNotificationController::class, 'markAllAlertsRead']);
+        Route::put('/notifications/alerts/{recipientId}/read',          [AdminNotificationController::class, 'markOneRead']);
+        Route::get('/notifications/{id}',                               [AdminNotificationController::class, 'show']);
+        Route::delete('/notifications/{id}',                            [AdminNotificationController::class, 'destroy']);
 
         // Complaints — view, review, reply
         Route::get('/complaints',         [AdminComplaintController::class, 'index']);
@@ -355,10 +361,22 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/cameras/{id}', [CameraController::class, 'destroy']);
 
         // Surveillance Events — view + filter + summary
-        Route::get('/surveillance-events',         [SurveillanceEventController::class, 'index']);
-        Route::get('/surveillance-events/summary',  [SurveillanceEventController::class, 'summary']);
-        Route::get('/surveillance-events/{id}',    [SurveillanceEventController::class, 'show']);
-        Route::delete('/surveillance-events/{id}', [SurveillanceEventController::class, 'destroy']);
+        Route::get('/surveillance-events',                      [SurveillanceEventController::class, 'index']);
+        Route::get('/surveillance-events/summary',              [SurveillanceEventController::class, 'summary']);
+        Route::get('/surveillance-events/{id}',                 [SurveillanceEventController::class, 'show']);
+        Route::patch('/surveillance-events/{id}/status',        [SurveillanceEventController::class, 'updateStatus']);
+        Route::delete('/surveillance-events/{id}',              [SurveillanceEventController::class, 'destroy']);
+
+        // AI Camera Proxy — control KIRA streams from the admin panel
+        Route::get('/ai-cameras/health',          [AiCameraController::class, 'health']);
+        Route::get('/ai-cameras/streams',         [AiCameraController::class, 'streams']);
+        Route::post('/ai-cameras/sync',           [AiCameraController::class, 'sync']);
+        Route::post('/ai-cameras/{id}/start',     [AiCameraController::class, 'start']);
+        Route::post('/ai-cameras/{id}/stop',      [AiCameraController::class, 'stop']);
+
+        // Footage — stream fight recording files from KIRA footage directory
+        Route::get('/surveillance-footage/{filename}', [SurveillanceEventController::class, 'footage'])
+            ->where('filename', '[A-Za-z0-9._-]+');
 
         // Report Cards — PDF generation
         Route::get('/report-cards/student/{studentId}',         [ReportCardController::class, 'student']);

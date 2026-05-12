@@ -37,13 +37,17 @@ class CameraController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'location' => 'required|string|max:255',
-            'isactive' => 'sometimes|boolean',
+            'location'   => 'required|string|max:255',
+            'isactive'   => 'sometimes|boolean',
+            'code'       => 'sometimes|nullable|string|max:64|unique:camera,code',
+            'stream_url' => 'sometimes|nullable|string|max:512',
         ]);
 
         $camera = Camera::create([
-            'location' => $data['location'],
-            'isactive' => $data['isactive'] ?? true,
+            'location'   => $data['location'],
+            'isactive'   => $data['isactive'] ?? true,
+            'code'       => $data['code'] ?? null,
+            'stream_url' => $data['stream_url'] ?? null,
         ]);
 
         return response()->json($camera, 201);
@@ -69,8 +73,10 @@ class CameraController extends Controller
         $camera = Camera::where('camera_id', $id)->firstOrFail();
 
         $data = $request->validate([
-            'location' => 'sometimes|string|max:255',
-            'isactive' => 'sometimes|boolean',
+            'location'   => 'sometimes|string|max:255',
+            'isactive'   => 'sometimes|boolean',
+            'code'       => 'sometimes|nullable|string|max:64|unique:camera,code,' . $camera->camera_id . ',camera_id',
+            'stream_url' => 'sometimes|nullable|string|max:512',
         ]);
 
         $camera->update($data);
