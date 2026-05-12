@@ -15,6 +15,9 @@ class SurveillanceEvent extends Model
         'detectedtype',
         'detectedat',
         'severity',
+        'confidence',
+        'footage_path',
+        'status',
         'relatedstudent_id',
         'relatedsection_id',
         'relatedassessment_id',
@@ -24,6 +27,7 @@ class SurveillanceEvent extends Model
     {
         return [
             'detectedat' => 'datetime',
+            'confidence' => 'float',
         ];
     }
 

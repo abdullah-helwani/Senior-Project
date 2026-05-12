@@ -11,9 +11,12 @@ Environment variables:
 """
 
 import os
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+
+load_dotenv()
 
 from alert_sender import AlertSender
 from camera_manager import CameraManager

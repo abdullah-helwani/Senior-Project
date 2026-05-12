@@ -9,6 +9,7 @@ Architecture: YOLO26-pose + velocity features + mLSTM
 
 import cv2
 import numpy as np
+from typing import Optional
 import torch
 import torch.nn as nn
 from collections import deque
@@ -32,8 +33,8 @@ VEL_SIZE   = MAX_PEOPLE * N_KEYPOINTS * VEL_PER_KP    # 68
 INPUT_SIZE = POS_SIZE + VEL_SIZE                       # 170
 
 YOLO_MODEL   = "yolo26n-pose.pt"
-LSTM_MODEL_PATH = Path(__file__).parent / "models" / "fight_mlstm.pt"
-FIGHT_THRESHOLD = 0.70   # confidence required to trigger alert
+LSTM_MODEL_PATH = Path(__file__).parent / "fight_mlstm_81pct_final.pt"
+FIGHT_THRESHOLD = 0.60   # confidence required to trigger alert
 
 
 # ── mLSTM cell (xLSTM 2024) ───────────────────────────────────────────────────
@@ -254,7 +255,7 @@ def build_frame_features(curr_pos: np.ndarray, prev_pos: np.ndarray) -> np.ndarr
 # ── Main detector class ───────────────────────────────────────────────────────
 
 class FightDetector:
-    def __init__(self, device: str | None = None):
+    def __init__(self, device: Optional[str] = None):
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         print(f"[FightDetector] Using device: {self.device}")
 
@@ -269,7 +270,7 @@ class FightDetector:
         self.prev_pos: np.ndarray = np.zeros(POS_SIZE, dtype=np.float32)
 
         # mLSTM classifier
-        self.mlstm: FightmLSTM | None = None
+        self.mlstm: Optional[FightmLSTM] = None
         if LSTM_MODEL_PATH.exists():
             self.load_model()
 

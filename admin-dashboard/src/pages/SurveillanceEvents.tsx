@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   Table, Button, Select, Modal, Input, Card, Typography,
-  Row, Col, Space, Tag, Descriptions, DatePicker, Statistic, message,
+  Row, Col, Space, Tag, Descriptions, DatePicker, Statistic, message, Progress, Tooltip,
 } from 'antd';
-import { EyeOutlined, DeleteOutlined, BarChartOutlined, AlertOutlined } from '@ant-design/icons';
+import { EyeOutlined, DeleteOutlined, BarChartOutlined, AlertOutlined, CheckOutlined, StopOutlined, DownloadOutlined } from '@ant-design/icons';
 import api from '../api/axios';
 import dayjs, { Dayjs } from 'dayjs';
 
@@ -14,12 +14,19 @@ const SEVERITY_COLORS: Record<string, string> = {
   low: 'blue', medium: 'orange', high: 'red', critical: 'magenta',
 };
 
+const STATUS_COLORS: Record<string, string> = {
+  new: 'red', acknowledged: 'orange', dismissed: 'default',
+};
+
 interface SurveillanceEvent {
   survevent_id: number;
-  camera_id: number;
+  camera_id: number | null;
   detectedtype: string;
   detectedat: string;
   severity: string;
+  confidence: number | null;
+  footage_path: string | null;
+  status: 'new' | 'acknowledged' | 'dismissed';
   relatedstudent_id: number | null;
   relatedsection_id: number | null;
   relatedassessment_id: number | null;
@@ -51,6 +58,7 @@ export default function SurveillanceEvents() {
   const [cameraFilter, setCameraFilter] = useState<number | undefined>();
   const [typeFilter, setTypeFilter] = useState<string | undefined>();
   const [severityFilter, setSeverityFilter] = useState<string | undefined>();
+  const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const [sectionFilter, setSectionFilter] = useState<number | undefined>();
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null);
 
@@ -64,6 +72,8 @@ export default function SurveillanceEvents() {
     [dayjs().subtract(30, 'day'), dayjs()]
   );
 
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
   const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
@@ -71,6 +81,7 @@ export default function SurveillanceEvents() {
       if (cameraFilter) params.camera_id = cameraFilter;
       if (typeFilter) params.detectedtype = typeFilter;
       if (severityFilter) params.severity = severityFilter;
+      if (statusFilter) params.status = statusFilter;
       if (sectionFilter) params.section_id = sectionFilter;
       if (dateRange) { params.from = dateRange[0].format('YYYY-MM-DD'); params.to = dateRange[1].format('YYYY-MM-DD'); }
       const res = await api.get('/admin/surveillance-events', { params });
@@ -79,7 +90,7 @@ export default function SurveillanceEvents() {
       setTotal(res.data.total || 0);
     } catch { message.error('Failed to load events'); }
     finally { setLoading(false); }
-  }, [cameraFilter, typeFilter, severityFilter, sectionFilter, dateRange, page]);
+  }, [cameraFilter, typeFilter, severityFilter, statusFilter, sectionFilter, dateRange, page]);
 
   const fetchOptions = async () => {
     try {
@@ -94,6 +105,26 @@ export default function SurveillanceEvents() {
 
   useEffect(() => { fetchOptions(); }, []);
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
+
+  const downloadFootage = async (footagePath: string) => {
+    const filename = footagePath.replace(/\\/g, '/').split('/').pop() ?? 'recording.avi';
+    setDownloadingId(filename);
+    try {
+      const res = await api.get(`/admin/surveillance-footage/${filename}`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } catch {
+      message.error('Failed to download footage file.');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const openDetail = async (id: number) => {
     try {
@@ -110,6 +141,17 @@ export default function SurveillanceEvents() {
       catch { message.error('Failed to delete'); }
     },
   });
+
+  const updateStatus = async (id: number, status: string) => {
+    try {
+      await api.patch(`/admin/surveillance-events/${id}/status`, { status });
+      message.success(`Marked as ${status}`);
+      fetchEvents();
+      if (selected?.survevent_id === id) {
+        setSelected((prev) => prev ? { ...prev, status: status as SurveillanceEvent['status'] } : prev);
+      }
+    } catch { message.error('Failed to update status'); }
+  };
 
   const loadSummary = async () => {
     setSummaryLoading(true);
@@ -129,38 +171,43 @@ export default function SurveillanceEvents() {
 
   const columns = [
     {
-      title: 'Detected At', dataIndex: 'detectedat', key: 'at', width: 160,
+      title: 'Detected At', dataIndex: 'detectedat', key: 'at', width: 150,
       render: (d: string) => dayjs(d).format('YYYY-MM-DD HH:mm'),
     },
     {
       title: 'Camera', key: 'camera',
-      render: (_: unknown, r: SurveillanceEvent) => r.camera?.location || `#${r.camera_id}`,
+      render: (_: unknown, r: SurveillanceEvent) => r.camera?.location || (r.camera_id ? `#${r.camera_id}` : '—'),
     },
     {
-      title: 'Type', dataIndex: 'detectedtype', key: 'type',
+      title: 'Type', dataIndex: 'detectedtype', key: 'type', width: 110,
       render: (t: string) => <Tag icon={<AlertOutlined />}>{t}</Tag>,
     },
     {
-      title: 'Severity', dataIndex: 'severity', key: 'sev', width: 110,
+      title: 'Severity', dataIndex: 'severity', key: 'sev', width: 100,
       render: (s: string) => <Tag color={SEVERITY_COLORS[s]}>{s.toUpperCase()}</Tag>,
     },
     {
-      title: 'Student', key: 'student',
-      render: (_: unknown, r: SurveillanceEvent) => r.student?.user?.name || (r.relatedstudent_id ? `#${r.relatedstudent_id}` : '—'),
+      title: 'Confidence', dataIndex: 'confidence', key: 'conf', width: 120,
+      render: (c: number | null) => c !== null
+        ? <Progress percent={Math.round(c * 100)} size="small" status={c >= 0.75 ? 'exception' : 'normal'} />
+        : <span style={{ color: '#aaa' }}>—</span>,
     },
     {
-      title: 'Section', key: 'section',
-      render: (_: unknown, r: SurveillanceEvent) => {
-        if (!r.section) return r.relatedsection_id ? `#${r.relatedsection_id}` : '—';
-        return `${r.section.schoolClass?.name || ''} — ${r.section.name}`;
-      },
+      title: 'Status', dataIndex: 'status', key: 'status', width: 120,
+      render: (s: string) => <Tag color={STATUS_COLORS[s]}>{s.toUpperCase()}</Tag>,
     },
     {
-      title: 'Actions', key: 'actions', width: 120,
+      title: 'Actions', key: 'actions', width: 160,
       render: (_: unknown, r: SurveillanceEvent) => (
         <Space>
-          <Button size="small" icon={<EyeOutlined />} onClick={() => openDetail(r.survevent_id)} />
-          <Button size="small" icon={<DeleteOutlined />} danger onClick={() => handleDelete(r.survevent_id)} />
+          <Tooltip title="View"><Button size="small" icon={<EyeOutlined />} onClick={() => openDetail(r.survevent_id)} /></Tooltip>
+          {r.status === 'new' && (
+            <Tooltip title="Acknowledge"><Button size="small" icon={<CheckOutlined />} onClick={() => updateStatus(r.survevent_id, 'acknowledged')} /></Tooltip>
+          )}
+          {r.status !== 'dismissed' && (
+            <Tooltip title="Dismiss"><Button size="small" icon={<StopOutlined />} onClick={() => updateStatus(r.survevent_id, 'dismissed')} /></Tooltip>
+          )}
+          <Tooltip title="Delete"><Button size="small" icon={<DeleteOutlined />} danger onClick={() => handleDelete(r.survevent_id)} /></Tooltip>
         </Space>
       ),
     },
@@ -179,16 +226,24 @@ export default function SurveillanceEvents() {
             value={cameraFilter} onChange={(v) => { setCameraFilter(v); setPage(1); }}
             options={cameras.map((c) => ({ value: c.camera_id, label: c.location }))}
           />
-          <Input placeholder="Type (e.g. cheating)" style={{ width: 180 }} allowClear
+          <Input placeholder="Type (e.g. fight)" style={{ width: 160 }} allowClear
             value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value || undefined); setPage(1); }}
           />
-          <Select placeholder="Severity" style={{ width: 150 }} allowClear
+          <Select placeholder="Severity" style={{ width: 140 }} allowClear
             value={severityFilter} onChange={(v) => { setSeverityFilter(v); setPage(1); }}
             options={['low', 'medium', 'high', 'critical'].map((s) => ({
               value: s, label: s.charAt(0).toUpperCase() + s.slice(1),
             }))}
           />
-          <Select placeholder="Section" style={{ width: 220 }} allowClear showSearch optionFilterProp="label"
+          <Select placeholder="Status" style={{ width: 140 }} allowClear
+            value={statusFilter} onChange={(v) => { setStatusFilter(v); setPage(1); }}
+            options={[
+              { value: 'new', label: 'New' },
+              { value: 'acknowledged', label: 'Acknowledged' },
+              { value: 'dismissed', label: 'Dismissed' },
+            ]}
+          />
+          <Select placeholder="Section" style={{ width: 200 }} allowClear showSearch optionFilterProp="label"
             value={sectionFilter} onChange={(v) => { setSectionFilter(v); setPage(1); }}
             options={sections.map((s) => ({ value: s.section_id, label: `${s.school_class?.name || ''} — ${s.name}` }))}
           />
@@ -202,34 +257,70 @@ export default function SurveillanceEvents() {
       <Card>
         <Table
           dataSource={events} columns={columns} rowKey="survevent_id" loading={loading}
+          rowClassName={(r) => r.status === 'new' && r.detectedtype === 'fight' ? 'ant-table-row-fight-new' : ''}
           pagination={{ current: page, total, pageSize: 20, onChange: setPage, showTotal: (t) => `${t} events`, showSizeChanger: false }}
           size="small"
         />
       </Card>
 
       {/* Detail Modal */}
-      <Modal title="Event Detail" open={detailOpen} onCancel={() => { setDetailOpen(false); setSelected(null); }} footer={null} width={550}>
+      <Modal title="Event Detail" open={detailOpen} onCancel={() => { setDetailOpen(false); setSelected(null); }} footer={null} width={580}>
         {selected && (
-          <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label="Event ID">{selected.survevent_id}</Descriptions.Item>
-            <Descriptions.Item label="Detected At">{dayjs(selected.detectedat).format('YYYY-MM-DD HH:mm:ss')}</Descriptions.Item>
-            <Descriptions.Item label="Camera">{selected.camera?.location || `#${selected.camera_id}`}</Descriptions.Item>
-            <Descriptions.Item label="Type"><Tag icon={<AlertOutlined />}>{selected.detectedtype}</Tag></Descriptions.Item>
-            <Descriptions.Item label="Severity">
-              <Tag color={SEVERITY_COLORS[selected.severity]}>{selected.severity.toUpperCase()}</Tag>
-            </Descriptions.Item>
-            {selected.student && (
-              <Descriptions.Item label="Student">{selected.student.user?.name || `#${selected.relatedstudent_id}`}</Descriptions.Item>
-            )}
-            {selected.section && (
-              <Descriptions.Item label="Section">
-                {selected.section.schoolClass?.name || ''} — {selected.section.name}
+          <>
+            <Descriptions column={1} bordered size="small">
+              <Descriptions.Item label="Event ID">{selected.survevent_id}</Descriptions.Item>
+              <Descriptions.Item label="Detected At">{dayjs(selected.detectedat).format('YYYY-MM-DD HH:mm:ss')}</Descriptions.Item>
+              <Descriptions.Item label="Camera">{selected.camera?.location || (selected.camera_id ? `#${selected.camera_id}` : '—')}</Descriptions.Item>
+              <Descriptions.Item label="Type"><Tag icon={<AlertOutlined />}>{selected.detectedtype}</Tag></Descriptions.Item>
+              <Descriptions.Item label="Severity">
+                <Tag color={SEVERITY_COLORS[selected.severity]}>{selected.severity.toUpperCase()}</Tag>
               </Descriptions.Item>
+              {selected.confidence !== null && (
+                <Descriptions.Item label="Confidence">
+                  <Progress percent={Math.round(selected.confidence * 100)} size="small" style={{ width: 200 }} />
+                </Descriptions.Item>
+              )}
+              <Descriptions.Item label="Status">
+                <Tag color={STATUS_COLORS[selected.status]}>{selected.status.toUpperCase()}</Tag>
+              </Descriptions.Item>
+              {selected.footage_path && (
+                <Descriptions.Item label="Footage">
+                  <Button
+                    icon={<DownloadOutlined />}
+                    size="small"
+                    loading={downloadingId !== null}
+                    onClick={() => downloadFootage(selected.footage_path!)}
+                  >
+                    Download Recording
+                  </Button>
+                </Descriptions.Item>
+              )}
+              {selected.student && (
+                <Descriptions.Item label="Student">{selected.student.user?.name || `#${selected.relatedstudent_id}`}</Descriptions.Item>
+              )}
+              {selected.section && (
+                <Descriptions.Item label="Section">
+                  {selected.section.schoolClass?.name || ''} — {selected.section.name}
+                </Descriptions.Item>
+              )}
+              {selected.assessment && (
+                <Descriptions.Item label="Assessment">{selected.assessment.title}</Descriptions.Item>
+              )}
+            </Descriptions>
+
+            {selected.status !== 'dismissed' && (
+              <Space style={{ marginTop: 16 }}>
+                {selected.status === 'new' && (
+                  <Button icon={<CheckOutlined />} onClick={() => updateStatus(selected.survevent_id, 'acknowledged')}>
+                    Acknowledge
+                  </Button>
+                )}
+                <Button icon={<StopOutlined />} onClick={() => updateStatus(selected.survevent_id, 'dismissed')}>
+                  Dismiss
+                </Button>
+              </Space>
             )}
-            {selected.assessment && (
-              <Descriptions.Item label="Assessment">{selected.assessment.title}</Descriptions.Item>
-            )}
-          </Descriptions>
+          </>
         )}
       </Modal>
 
