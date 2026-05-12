@@ -12,14 +12,17 @@ class Invoice extends Model
 
     protected $fillable = [
         'account_id',
+        'issued_date',
         'due_date',
         'totalamount',
         'status',
+        'notes',
     ];
 
     protected function casts(): array
     {
         return [
+            'issued_date' => 'date',
             'due_date'    => 'date',
             'totalamount' => 'decimal:2',
         ];

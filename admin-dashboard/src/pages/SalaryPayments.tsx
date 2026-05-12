@@ -68,9 +68,9 @@ export default function SalaryPayments() {
   const openEdit = (p: SalaryPayment) => {
     setEditing(p);
     form.setFieldsValue({
-      amount: p.amount,
-      period_month: dayjs(p.periodmonth).format('YYYY-MM-DD'),
-      paidat: dayjs(p.paidat).format('YYYY-MM-DDTHH:mm'),
+      amount: Number(p.amount),
+      period_month: p.periodmonth ? dayjs(p.periodmonth) : null,
+      paidat: p.paidat ? dayjs(p.paidat) : null,
     });
     setModalOpen(true);
   };
@@ -78,11 +78,20 @@ export default function SalaryPayments() {
   const handleSubmit = async (values: Record<string, unknown>) => {
     setModalLoading(true);
     try {
+      const payload: Record<string, unknown> = {
+        ...values,
+        period_month: values.period_month
+          ? dayjs(values.period_month as string).format('YYYY-MM-DD')
+          : undefined,
+        paidat: values.paidat
+          ? dayjs(values.paidat as string).format('YYYY-MM-DD HH:mm:ss')
+          : undefined,
+      };
       if (editing) {
-        await api.put(`/admin/salary-payments/${editing.salarypayment_id}`, values);
+        await api.put(`/admin/salary-payments/${editing.salarypayment_id}`, payload);
         message.success('Updated');
       } else {
-        await api.post('/admin/salary-payments', values);
+        await api.post('/admin/salary-payments', payload);
         message.success('Salary payment recorded');
       }
       setModalOpen(false); form.resetFields(); setEditing(null); fetchPayments();

@@ -239,18 +239,21 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/fee-plans/{id}', [FeePlanController::class, 'destroy']);
 
         // Student Fee Plans — assign plans to students, track balances
-        Route::get('/student-fee-plans',         [StudentFeePlanController::class, 'index']);
-        Route::post('/student-fee-plans',        [StudentFeePlanController::class, 'store']);
-        Route::get('/student-fee-plans/{id}',    [StudentFeePlanController::class, 'show']);
-        Route::put('/student-fee-plans/{id}',    [StudentFeePlanController::class, 'update']);
-        Route::delete('/student-fee-plans/{id}', [StudentFeePlanController::class, 'destroy']);
+        Route::get('/student-fee-plans/by-student', [StudentFeePlanController::class, 'byStudent']);
+        Route::get('/student-fee-plans',            [StudentFeePlanController::class, 'index']);
+        Route::post('/student-fee-plans',           [StudentFeePlanController::class, 'store']);
+        Route::get('/student-fee-plans/{id}',       [StudentFeePlanController::class, 'show']);
+        Route::put('/student-fee-plans/{id}',       [StudentFeePlanController::class, 'update']);
+        Route::delete('/student-fee-plans/{id}',    [StudentFeePlanController::class, 'destroy']);
 
         // Invoices — generate + manage student bills
-        Route::get('/invoices',         [InvoiceController::class, 'index']);
-        Route::post('/invoices',        [InvoiceController::class, 'store']);
-        Route::get('/invoices/{id}',    [InvoiceController::class, 'show']);
-        Route::put('/invoices/{id}',    [InvoiceController::class, 'update']);
-        Route::delete('/invoices/{id}', [InvoiceController::class, 'destroy']);
+        Route::get('/invoices/by-student',     [InvoiceController::class, 'byStudent']);
+        Route::post('/invoices/{id}/mark-paid', [InvoiceController::class, 'markPaid']);
+        Route::get('/invoices',                [InvoiceController::class, 'index']);
+        Route::post('/invoices',               [InvoiceController::class, 'store']);
+        Route::get('/invoices/{id}',           [InvoiceController::class, 'show']);
+        Route::put('/invoices/{id}',           [InvoiceController::class, 'update']);
+        Route::delete('/invoices/{id}',        [InvoiceController::class, 'destroy']);
 
         // Payments — record + void payments against invoices
         Route::get('/payments',         [PaymentController::class, 'index']);
