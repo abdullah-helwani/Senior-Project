@@ -10,3 +10,5 @@ pydantic>=2.7.0
 python-multipart>=0.0.9
 tqdm>=4.66.0
 scikit-learn>=1.4.0
+imageio-ffmpeg>=0.4.9
+python-dotenv>=1.0.0

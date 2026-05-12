@@ -17,6 +17,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional, Dict, List
 
 from detector import FightDetector
 from alert_sender import AlertSender
@@ -47,30 +48,29 @@ class StreamInfo:
 
 class FootageWriter:
     """
-    Saves fight footage: PRE_BUFFER + POST_BUFFER seconds around an event.
-
-    How it works:
-      1. Camera manager keeps a rolling buffer of the last 10 seconds of frames
-      2. When fight detected → dump that buffer to a video file (the pre-fight footage)
-      3. Continue recording for 10 more seconds (post-fight footage)
-      4. Result: a clip showing 10s before + moment of fight + 10s after
+    Saves fight footage as MJPEG AVI: PRE_BUFFER + POST_BUFFER seconds.
+    MJPEG is natively supported by OpenCV on every platform with no extra
+    codecs — the resulting .avi can be opened by VLC / Windows Media Player.
     """
     def __init__(self, camera_id: str, fps: float, frame_size: tuple):
         self.camera_id  = camera_id
-        self.fps        = fps
-        self.frame_size = frame_size   # (width, height)
-        self._writer: cv2.VideoWriter | None = None
-        self._filepath  = ""
+        self.fps        = max(int(fps / 2), 1)   # halved: USB webcams over-report FPS
+        self.frame_size = frame_size              # (width, height)
+        self._writer:   Optional[cv2.VideoWriter] = None
+        self._filepath         = ""
         self._frames_remaining = 0
         self._lock = threading.Lock()
 
     def start(self, pre_buffer: list) -> str:
-        """Start recording. Writes pre-fight frames first."""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filepath  = str(FOOTAGE_DIR / f"{self.camera_id}_{timestamp}.mp4")
+        filepath  = str(FOOTAGE_DIR / f"{self.camera_id}_{timestamp}.avi")
 
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        writer = cv2.VideoWriter(filepath, fourcc, self.fps, self.frame_size)
+        writer = cv2.VideoWriter(
+            filepath,
+            cv2.VideoWriter_fourcc(*"MJPG"),
+            self.fps,
+            self.frame_size,
+        )
 
         with self._lock:
             self._writer           = writer
@@ -86,11 +86,13 @@ class FootageWriter:
     def write(self, frame) -> bool:
         """Write one post-fight frame. Returns False when done."""
         with self._lock:
-            if self._writer is None or self._frames_remaining <= 0:
+            if self._frames_remaining <= 0 or self._writer is None:
                 self._finish()
                 return False
             self._writer.write(frame)
             self._frames_remaining -= 1
+            if self._frames_remaining <= 0:
+                self._finish()
             return True
 
     def _finish(self):
@@ -108,7 +110,7 @@ class FootageWriter:
 class CameraManager:
     def __init__(self, alert_sender: AlertSender):
         self.alert_sender = alert_sender
-        self._streams: dict[str, StreamInfo] = {}
+        self._streams: Dict[str, StreamInfo] = {}
         self._lock = threading.Lock()
 
     # ── Public API ─────────────────────────────────────────────────────────────
@@ -145,7 +147,7 @@ class CameraManager:
             self._streams.pop(stream_id, None)
         return True
 
-    def list_streams(self) -> list[dict]:
+    def list_streams(self) -> List[dict]:
         with self._lock:
             return [
                 {
@@ -168,14 +170,25 @@ class CameraManager:
             self._mark_stopped(stream_id)
             return
 
-        fps        = cap.get(cv2.CAP_PROP_FPS) or 30.0
+        # Measure actual FPS by timing 10 real frames — USB webcams on Windows
+        # often report 0 or wrong values from CAP_PROP_FPS
         frame_w    = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         frame_h    = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        reported   = cap.get(cv2.CAP_PROP_FPS)
+        if reported and reported > 1:
+            fps = reported
+        else:
+            t0 = time.time()
+            for _ in range(10):
+                cap.read()
+            fps = round(10 / max(time.time() - t0, 0.1))
+            fps = max(fps, 10)   # floor at 10 to avoid absurd values
+        print(f"[CameraManager] Detected FPS: {fps:.0f}")
         pre_maxlen = int(PRE_BUFFER_SECONDS * fps)
 
         # Rolling circular buffer — always holds the last 10s of frames
         pre_buffer: deque = deque(maxlen=pre_maxlen)
-        footage_writer: FootageWriter | None = None
+        footage_writer: Optional[FootageWriter] = None
 
         print(f"[CameraManager] Stream '{camera_id}' started ({fps:.0f} fps)")
 
@@ -196,9 +209,9 @@ class CameraManager:
                 if info:
                     info.frame_count += 1
 
-            # Continue writing post-fight footage if active
+            # Continue writing post-fight footage if active (raw frame, no overlay)
             if footage_writer and footage_writer.is_recording:
-                footage_writer.write(result["annotated_frame"])
+                footage_writer.write(frame)
 
             # Fight detected — trigger alert + footage
             if result["fight"]:

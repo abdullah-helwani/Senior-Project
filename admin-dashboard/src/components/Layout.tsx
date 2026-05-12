@@ -28,7 +28,6 @@ import {
   MenuUnfoldOutlined,
   LogoutOutlined,
   ProfileOutlined,
-  BellOutlined,
   CoffeeOutlined,
   CarOutlined,
   VideoCameraOutlined,
@@ -41,8 +40,10 @@ import {
   FireOutlined,
   SettingOutlined,
   SafetyOutlined,
+  BellOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
+import NotificationBell from './NotificationBell';
 
 const { Sider, Header, Content } = AntLayout;
 const { Text } = Typography;
@@ -308,7 +309,7 @@ export default function Layout() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <Button type="text" shape="circle" icon={<BellOutlined />} />
+            <NotificationBell />
             <Dropdown
               menu={{
                 items: [

@@ -38,6 +38,10 @@ class SurveillanceEventController extends Controller
             $query->where('relatedsection_id', $request->section_id);
         }
 
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
         if ($request->filled('from')) {
             $query->where('detectedat', '>=', $request->from);
         }
@@ -91,6 +95,41 @@ class SurveillanceEventController extends Controller
             'by_severity' => $events->groupBy('severity')->map->count(),
             'by_camera'  => $events->groupBy('camera_id')->map->count(),
         ]);
+    }
+
+    /**
+     * PATCH /admin/surveillance-events/{id}/status
+     *
+     * Mark an event as acknowledged or dismissed.
+     */
+    public function updateStatus(int $id, Request $request)
+    {
+        $event = SurveillanceEvent::where('survevent_id', $id)->firstOrFail();
+
+        $data = $request->validate([
+            'status' => 'required|in:new,acknowledged,dismissed',
+        ]);
+
+        $event->update(['status' => $data['status']]);
+
+        return response()->json($event);
+    }
+
+    /**
+     * GET /admin/surveillance-footage/{filename}
+     *
+     * Stream a fight recording file from the KIRA footage directory.
+     * Filename is restricted to alphanumerics + dots/dashes/underscores by the route regex.
+     */
+    public function footage(string $filename)
+    {
+        $dir      = rtrim(env('KIRA_FOOTAGE_PATH', ''), '/\\');
+        $filepath = $dir . DIRECTORY_SEPARATOR . $filename;
+
+        abort_unless(file_exists($filepath), 404, 'Footage file not found.');
+
+        // Serve as a download so the browser hands it off to the native video player
+        return response()->download($filepath, $filename);
     }
 
     /**

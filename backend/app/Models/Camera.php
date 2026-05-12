@@ -13,6 +13,9 @@ class Camera extends Model
     protected $fillable = [
         'location',
         'isactive',
+        'code',
+        'stream_url',
+        'stream_id',
     ];
 
     protected function casts(): array

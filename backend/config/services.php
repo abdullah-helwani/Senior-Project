@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    // KIRA fight-detection AI service
+    'kira' => [
+        'base_url'    => env('KIRA_BASE_URL', 'http://localhost:8001'),
+        'api_key'     => env('KIRA_API_KEY'),       // Laravel → KIRA (start/stop/list)
+        'webhook_key' => env('AI_API_KEY'),          // KIRA → Laravel (fight-alert webhook)
+    ],
+
 ];
