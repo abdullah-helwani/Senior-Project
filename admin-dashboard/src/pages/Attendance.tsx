@@ -18,7 +18,7 @@ interface Session {
   session_id: number;
   section_id: number;
   date: string;
-  section?: { section_id: number; name: string; schoolClass?: { name: string } };
+  section?: { section_id: number; name: string; schoolClass?: { name: string }; school_class?: { name: string } };
 }
 
 interface AttendanceRecord {
@@ -32,16 +32,6 @@ interface SessionDetail {
   session: Session;
   summary: { present: number; absent: number; late: number; excused: number };
   students: AttendanceRecord[];
-}
-
-interface StudentSummary {
-  student_id: number;
-  total_sessions: number;
-  present: number;
-  absent: number;
-  late: number;
-  excused: number;
-  percentage: number;
 }
 
 interface Section { section_id: number; name: string; school_class?: { name: string } }

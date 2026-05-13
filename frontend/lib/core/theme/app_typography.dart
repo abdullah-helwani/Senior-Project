@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-/// Typography scale — a refined Material 3 hierarchy with our preferred
-/// weights, letter spacing and font family.
-///
-/// We use system sans-serif (`SF Pro` on iOS, `Roboto` on Android, system
-/// default on web) by default to avoid a font-loading dependency. To swap to
-/// a custom font (e.g. Plus Jakarta Sans via google_fonts), change [fontFamily]
-/// to the family name and call `GoogleFonts.config.allowRuntimeFetching = true`
-/// at app start.
+/// Typography scale — Inter via google_fonts, matching the Polaris design system.
 class AppTypography {
   AppTypography._();
 
-  /// `null` = use system default (Roboto / SF Pro). Set to a string like
-  /// `'PlusJakartaSans'` after wiring google_fonts.
-  static const String? fontFamily = null;
+  static const String fontFamily = 'Inter';
+
+  /// Returns the Inter TextTheme from google_fonts, with our scale applied.
+  static TextTheme googleFontsTextTheme(TextTheme base) =>
+      GoogleFonts.interTextTheme(base);
 
   /// Builds the [TextTheme] for a given color. `onSurface` is the default
   /// text color; helpers downstream override this for variants.

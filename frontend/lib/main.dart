@@ -48,8 +48,7 @@ class _AppState extends State<_App> {
       debugShowCheckedModeBanner: false,
       title: 'School App',
       theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.light,
     );
   }
 }

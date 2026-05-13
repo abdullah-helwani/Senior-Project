@@ -1,14 +1,8 @@
 import 'package:first_try/core/theme/theme.dart';
-import 'package:first_try/core/widgets/calendar/assessment_calendar_screen.dart';
 import 'package:first_try/core/widgets/ui/ui.dart';
 import 'package:first_try/features/parent/data/models/parent_models.dart';
-import 'package:first_try/features/parent/presentation/cubit/billing_cubit.dart';
-import 'package:first_try/features/parent/presentation/cubit/complaints_cubit.dart';
 import 'package:first_try/features/parent/presentation/cubit/parent_cubit.dart';
 import 'package:first_try/features/parent/presentation/cubit/parent_state.dart';
-import 'package:first_try/features/parent/presentation/screens/billing/parent_invoices_screen.dart';
-import 'package:first_try/features/parent/presentation/screens/billing/parent_payments_screen.dart';
-import 'package:first_try/features/parent/presentation/screens/parent_complaints_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -42,6 +36,31 @@ class ParentHomeScreen extends StatelessWidget {
                         : 'Good ${_greeting()}',
                     subtitle: DateFormat('EEEE, d MMMM').format(DateTime.now()),
                     colors: _kHeroGradient,
+                    stats: loaded
+                        ? () {
+                            final child = state.profile.children.isNotEmpty
+                                ? state.selectedChild
+                                : null;
+                            return [
+                              HeroStat(
+                                value: '${state.profile.children.length}',
+                                label: 'Children',
+                              ),
+                              HeroStat(
+                                value: child != null
+                                    ? '${child.attendancePercent.toStringAsFixed(0)}%'
+                                    : '—',
+                                label: 'Attendance',
+                              ),
+                              HeroStat(
+                                value: child != null
+                                    ? '${child.pendingHomeworkCount}'
+                                    : '—',
+                                label: 'Homework due',
+                              ),
+                            ];
+                          }()
+                        : null,
                     trailing: Container(
                       width: 42,
                       height: 42,
@@ -204,12 +223,6 @@ class ParentHomeScreen extends StatelessWidget {
                   );
                 }),
 
-                // ── More grid ─────────────────────────────────────────────
-                SliverToBoxAdapter(
-                  child: SectionHeader(title: 'More'),
-                ),
-                SliverToBoxAdapter(child: _MoreGrid()),
-
                 // ── Bottom safe-area spacer ───────────────────────────────
                 SliverToBoxAdapter(
                   child: Builder(
@@ -340,17 +353,29 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Expanded(
-      child: AppCard.filled(
-        color: color.withValues(alpha: 0.10),
+      child: Container(
         padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: Radii.mdRadius,
+          border: Border.all(color: cs.outlineVariant),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.18),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: Radii.smRadius,
               ),
               child: Icon(icon, color: color, size: 18),
@@ -360,14 +385,14 @@ class _StatCard extends StatelessWidget {
               value,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: color,
+                    color: cs.onSurface,
                   ),
             ),
             const SizedBox(height: 2),
             Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: color.withValues(alpha: 0.85),
+                    color: cs.onSurfaceVariant,
                   ),
             ),
           ],
@@ -488,131 +513,5 @@ class _HomeworkTile extends StatelessWidget {
     } catch (_) {
       return iso;
     }
-  }
-}
-
-class _MoreGrid extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final items = <_MoreItem>[
-      _MoreItem(
-        icon: Icons.receipt_long_rounded,
-        label: 'Invoices',
-        color: const Color(0xFF059669),
-        builder: (ctx) => MultiBlocProvider(
-          providers: [
-            BlocProvider.value(value: ctx.read<BillingCubit>()),
-            BlocProvider.value(value: ctx.read<ParentCubit>()),
-          ],
-          child: const ParentInvoicesScreen(),
-        ),
-      ),
-      _MoreItem(
-        icon: Icons.payments_rounded,
-        label: 'Payments',
-        color: const Color(0xFF0891B2),
-        builder: (ctx) => BlocProvider.value(
-          value: ctx.read<BillingCubit>(),
-          child: const ParentPaymentsScreen(),
-        ),
-      ),
-      _MoreItem(
-        icon: Icons.feedback_outlined,
-        label: 'Complaints',
-        color: const Color(0xFFF59E0B),
-        builder: (ctx) => MultiBlocProvider(
-          providers: [
-            BlocProvider.value(value: ctx.read<ComplaintsCubit>()),
-            BlocProvider.value(value: ctx.read<ParentCubit>()),
-          ],
-          child: const ParentComplaintsScreen(),
-        ),
-      ),
-      _MoreItem(
-        icon: Icons.event_note_rounded,
-        label: 'Calendar',
-        color: const Color(0xFFEC4899),
-        builder: (ctx) {
-          final cubit = ctx.read<ParentCubit>();
-          final st = cubit.state;
-          final childId = st is ParentLoaded ? st.selectedChildId : null;
-          if (childId == null) {
-            return const Scaffold(
-                body: Center(child: Text('No child selected.')));
-          }
-          return AssessmentCalendarScreen(
-            title: 'Assessment Calendar',
-            fetcher: () => cubit.repo.getChildAssessmentCalendar(childId),
-          );
-        },
-      ),
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      child: GridView.count(
-        crossAxisCount: 3,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        childAspectRatio: 1.0,
-        children: [for (final item in items) _MoreTile(item: item)],
-      ),
-    );
-  }
-}
-
-class _MoreItem {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final WidgetBuilder builder;
-  const _MoreItem({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.builder,
-  });
-}
-
-class _MoreTile extends StatelessWidget {
-  final _MoreItem item;
-  const _MoreTile({required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard.filled(
-      color: item.color.withValues(alpha: 0.10),
-      padding: const EdgeInsets.all(10),
-      onTap: () {
-        // Resolve cubits from outer context before pushing the new route.
-        final screen = item.builder(context);
-        Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
-      },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: item.color.withValues(alpha: 0.18),
-              borderRadius: Radii.smRadius,
-            ),
-            child: Icon(item.icon, color: item.color, size: 22),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            item.label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11,
-              color: item.color,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

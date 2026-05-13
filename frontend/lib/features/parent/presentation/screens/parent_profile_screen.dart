@@ -1,9 +1,15 @@
+import 'package:first_try/core/widgets/calendar/assessment_calendar_screen.dart';
 import 'package:first_try/core/widgets/shared/change_password_modal.dart';
 import 'package:first_try/core/widgets/shared/profile_avatar_picker.dart';
 import 'package:first_try/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:first_try/features/parent/data/models/parent_models.dart';
+import 'package:first_try/features/parent/presentation/cubit/billing_cubit.dart';
+import 'package:first_try/features/parent/presentation/cubit/complaints_cubit.dart';
 import 'package:first_try/features/parent/presentation/cubit/parent_cubit.dart';
 import 'package:first_try/features/parent/presentation/cubit/parent_state.dart';
+import 'package:first_try/features/parent/presentation/screens/billing/parent_invoices_screen.dart';
+import 'package:first_try/features/parent/presentation/screens/billing/parent_payments_screen.dart';
+import 'package:first_try/features/parent/presentation/screens/parent_complaints_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -72,6 +78,65 @@ class _ProfileTab extends StatelessWidget {
               icon: Icons.child_care_rounded,
               label: 'Children',
               value: '${profile.children.length} registered',
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Quick Links
+        _ProfileCard(
+          children: [
+            _NavTile(
+              icon: Icons.receipt_long_rounded,
+              label: 'Invoices',
+              color: const Color(0xFF059669),
+              onTap: (ctx) => MultiBlocProvider(
+                providers: [
+                  BlocProvider.value(value: ctx.read<BillingCubit>()),
+                  BlocProvider.value(value: ctx.read<ParentCubit>()),
+                ],
+                child: const ParentInvoicesScreen(),
+              ),
+            ),
+            _NavTile(
+              icon: Icons.payments_rounded,
+              label: 'Payments',
+              color: const Color(0xFF0891B2),
+              onTap: (ctx) => BlocProvider.value(
+                value: ctx.read<BillingCubit>(),
+                child: const ParentPaymentsScreen(),
+              ),
+            ),
+            _NavTile(
+              icon: Icons.feedback_outlined,
+              label: 'Complaints',
+              color: const Color(0xFFF59E0B),
+              onTap: (ctx) => MultiBlocProvider(
+                providers: [
+                  BlocProvider.value(value: ctx.read<ComplaintsCubit>()),
+                  BlocProvider.value(value: ctx.read<ParentCubit>()),
+                ],
+                child: const ParentComplaintsScreen(),
+              ),
+            ),
+            _NavTile(
+              icon: Icons.event_note_rounded,
+              label: 'Assessment Calendar',
+              color: const Color(0xFFEC4899),
+              onTap: (ctx) {
+                final cubit = ctx.read<ParentCubit>();
+                final st = cubit.state;
+                final childId = st is ParentLoaded ? st.selectedChildId : null;
+                if (childId == null) {
+                  return const Scaffold(
+                      body: Center(child: Text('No child selected.')));
+                }
+                return AssessmentCalendarScreen(
+                  title: 'Assessment Calendar',
+                  fetcher: () =>
+                      cubit.repo.getChildAssessmentCalendar(childId),
+                );
+              },
             ),
           ],
         ),
@@ -324,4 +389,52 @@ class _ActionTile extends StatelessWidget {
         trailing: Icon(Icons.chevron_right_rounded, color: color),
         onTap: onTap,
       );
+}
+
+class _NavTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final Widget Function(BuildContext ctx) onTap;
+  const _NavTile({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        final screen = onTap(context);
+        Navigator.of(context)
+            .push(MaterialPageRoute(builder: (_) => screen));
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 16, color: color),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(label,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600)),
+            ),
+            Icon(Icons.chevron_right_rounded,
+                size: 18,
+                color: Theme.of(context).colorScheme.onSurfaceVariant),
+          ],
+        ),
+      ),
+    );
+  }
 }
