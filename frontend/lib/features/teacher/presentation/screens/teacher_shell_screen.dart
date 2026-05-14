@@ -16,10 +16,10 @@ import 'package:first_try/features/teacher/presentation/cubit/teacher_profile_cu
 import 'package:first_try/features/teacher/presentation/cubit/teacher_salary_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_schedule_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_vacation_cubit.dart';
-import 'package:first_try/features/teacher/presentation/screens/teacher_attendance_screen.dart';
 import 'package:first_try/features/teacher/presentation/screens/teacher_classes_screen.dart';
 import 'package:first_try/features/teacher/presentation/screens/teacher_home_screen.dart';
 import 'package:first_try/features/teacher/presentation/screens/teacher_homework_screen.dart';
+import 'package:first_try/features/teacher/presentation/screens/teacher_messages_screen.dart';
 import 'package:first_try/features/teacher/presentation/screens/teacher_profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -113,7 +113,7 @@ class _TeacherShellScreenState extends State<TeacherShellScreen> {
             TeacherHomeScreen(),
             TeacherClassesScreen(),
             TeacherHomeworkScreen(),
-            TeacherAttendanceScreen(),
+            TeacherMessagesScreen(),
             TeacherProfileScreen(),
           ],
         ),
@@ -121,11 +121,11 @@ class _TeacherShellScreenState extends State<TeacherShellScreen> {
           selectedIndex: _index,
           onDestinationSelected: (i) => setState(() => _index = i),
           destinations: const [
-            NavigationDestination(icon: Icon(Icons.home_outlined),        selectedIcon: Icon(Icons.home_rounded),        label: 'Home'),
-            NavigationDestination(icon: Icon(Icons.groups_outlined),      selectedIcon: Icon(Icons.groups_rounded),      label: 'Classes'),
-            NavigationDestination(icon: Icon(Icons.assignment_outlined),  selectedIcon: Icon(Icons.assignment_rounded),  label: 'Homework'),
-            NavigationDestination(icon: Icon(Icons.fact_check_outlined),  selectedIcon: Icon(Icons.fact_check_rounded),  label: 'Attendance'),
-            NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded),    label: 'Profile'),
+            NavigationDestination(icon: Icon(Icons.home_outlined),           selectedIcon: Icon(Icons.home_rounded),           label: 'Home'),
+            NavigationDestination(icon: Icon(Icons.groups_outlined),         selectedIcon: Icon(Icons.groups_rounded),         label: 'Classes'),
+            NavigationDestination(icon: Icon(Icons.assignment_outlined),     selectedIcon: Icon(Icons.assignment_rounded),     label: 'Homework'),
+            NavigationDestination(icon: Icon(Icons.mail_outline_rounded),    selectedIcon: Icon(Icons.mail_rounded),           label: 'Inbox'),
+            NavigationDestination(icon: Icon(Icons.person_outline_rounded),  selectedIcon: Icon(Icons.person_rounded),         label: 'Profile'),
           ],
         ),
       ),

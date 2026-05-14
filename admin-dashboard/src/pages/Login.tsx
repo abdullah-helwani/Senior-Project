@@ -38,12 +38,21 @@ export default function Login() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
     }}>
-      <Card style={{ width: 400, boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}>
+      <Card style={{ width: 420, borderRadius: 16, boxShadow: '0 24px 64px rgba(19,26,51,.22)', border: 'none' }}>
         <Space direction="vertical" size="middle" style={{ width: '100%', textAlign: 'center' }}>
           <div>
-            <Title level={3} style={{ marginBottom: 4 }}>Admin Dashboard</Title>
+            <div style={{
+              width: 48, height: 48, borderRadius: 12,
+              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 12px',
+              boxShadow: '0 8px 20px rgba(99,102,241,.35)',
+            }}>
+              <span style={{ color: '#fff', fontWeight: 800, fontSize: 22, fontFamily: 'Inter, sans-serif' }}>S</span>
+            </div>
+            <Title level={3} style={{ marginBottom: 4, letterSpacing: '-0.3px' }}>School Admin</Title>
             <Text type="secondary">Sign in to your account</Text>
           </div>
 

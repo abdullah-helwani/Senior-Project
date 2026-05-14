@@ -12,94 +12,92 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // ── Brand ────────────────────────────────────────────────────────────────
-  // Indigo-violet: friendly but serious. Works for an education product.
+  // ── Brand — Polaris indigo-violet ────────────────────────────────────────
   static const seed = Color(0xFF6366F1);          // indigo-500
   static const seedDark = Color(0xFF818CF8);      // indigo-400 (lighter for dark surfaces)
 
   // ── Light scheme ─────────────────────────────────────────────────────────
-  static const lightPrimary       = Color(0xFF5B5FCF);
+  static const lightPrimary       = Color(0xFF4F46E5);   // Polaris --brand-primary
   static const lightOnPrimary     = Color(0xFFFFFFFF);
-  static const lightPrimaryContainer = Color(0xFFE4E4FE);
+  static const lightPrimaryContainer = Color(0xFFEEF2FF); // Polaris --brand-primary-soft
   static const lightOnPrimaryContainer = Color(0xFF1E1B4B);
 
-  static const lightSecondary     = Color(0xFFEC4899);   // pink-500
+  static const lightSecondary     = Color(0xFF8B5CF6);   // violet-500 (Polaris role-teacher)
   static const lightOnSecondary   = Color(0xFFFFFFFF);
-  static const lightSecondaryContainer = Color(0xFFFCE7F3);
-  static const lightOnSecondaryContainer = Color(0xFF500724);
+  static const lightSecondaryContainer = Color(0xFFF5F3FF);
+  static const lightOnSecondaryContainer = Color(0xFF3B0764);
 
-  static const lightTertiary      = Color(0xFF10B981);   // emerald-500
+  static const lightTertiary      = Color(0xFF16A34A);   // Polaris --color-success
   static const lightOnTertiary    = Color(0xFFFFFFFF);
-  static const lightTertiaryContainer = Color(0xFFD1FAE5);
-  static const lightOnTertiaryContainer = Color(0xFF064E3B);
+  static const lightTertiaryContainer = Color(0xFFDCFCE7); // Polaris --color-success-soft
+  static const lightOnTertiaryContainer = Color(0xFF14532D);
 
-  static const lightError         = Color(0xFFE11D48);   // rose-600
+  static const lightError         = Color(0xFFDC2626);   // Polaris --color-danger
   static const lightOnError       = Color(0xFFFFFFFF);
-  static const lightErrorContainer = Color(0xFFFFE4E6);
-  static const lightOnErrorContainer = Color(0xFF4C0519);
+  static const lightErrorContainer = Color(0xFFFEE2E2);  // Polaris --color-danger-soft
+  static const lightOnErrorContainer = Color(0xFF7F1D1D);
 
-  static const lightSurface       = Color(0xFFFAFAFB);
-  static const lightOnSurface     = Color(0xFF11131A);
-  static const lightSurfaceDim    = Color(0xFFEDEDF2);
+  static const lightSurface       = Color(0xFFF5F7FB);   // Polaris --bg
+  static const lightOnSurface     = Color(0xFF0F172A);   // Polaris --fg
+  static const lightSurfaceDim    = Color(0xFFEEF0F4);   // Polaris --surface-sunken
   static const lightSurfaceBright = Color(0xFFFFFFFF);
   static const lightSurfaceContainerLowest = Color(0xFFFFFFFF);
-  static const lightSurfaceContainerLow    = Color(0xFFF7F7FB);
+  static const lightSurfaceContainerLow    = Color(0xFFF7F7FB); // Polaris --surface-soft
   static const lightSurfaceContainer       = Color(0xFFF1F1F7);
   static const lightSurfaceContainerHigh   = Color(0xFFE9E9F1);
-  static const lightSurfaceContainerHighest = Color(0xFFE2E2EC);
-  static const lightOnSurfaceVariant = Color(0xFF565869);
-  static const lightOutline        = Color(0xFFB6B7C6);
-  static const lightOutlineVariant = Color(0xFFE3E3EC);
+  static const lightSurfaceContainerHighest = Color(0xFFE3E3EC); // Polaris --outline
+  static const lightOnSurfaceVariant = Color(0xFF475569);        // Polaris --fg-muted
+  static const lightOutline        = Color(0xFFCBD5E1);          // Polaris --outline-strong
+  static const lightOutlineVariant = Color(0xFFEEF0F4);          // Polaris --divider
 
-  // ── Dark scheme ──────────────────────────────────────────────────────────
-  static const darkPrimary        = Color(0xFFA5A8FF);
+  // ── Dark scheme — Polaris dark tokens ────────────────────────────────────
+  static const darkPrimary        = Color(0xFF818CF8);   // Polaris dark --brand-primary
   static const darkOnPrimary      = Color(0xFF1E1B4B);
   static const darkPrimaryContainer = Color(0xFF373BAB);
   static const darkOnPrimaryContainer = Color(0xFFE4E4FE);
 
-  static const darkSecondary      = Color(0xFFF9A8D4);
-  static const darkOnSecondary    = Color(0xFF500724);
-  static const darkSecondaryContainer = Color(0xFFA61653);
-  static const darkOnSecondaryContainer = Color(0xFFFCE7F3);
+  static const darkSecondary      = Color(0xFFA78BFA);   // violet-400
+  static const darkOnSecondary    = Color(0xFF3B0764);
+  static const darkSecondaryContainer = Color(0xFF5B21B6);
+  static const darkOnSecondaryContainer = Color(0xFFF5F3FF);
 
-  static const darkTertiary       = Color(0xFF6EE7B7);
-  static const darkOnTertiary     = Color(0xFF064E3B);
-  static const darkTertiaryContainer = Color(0xFF047857);
-  static const darkOnTertiaryContainer = Color(0xFFD1FAE5);
+  static const darkTertiary       = Color(0xFF22C55E);   // Polaris dark --color-success
+  static const darkOnTertiary     = Color(0xFF14532D);
+  static const darkTertiaryContainer = Color(0xFF166534);
+  static const darkOnTertiaryContainer = Color(0xFFDCFCE7);
 
-  static const darkError          = Color(0xFFFCA5A5);
-  static const darkOnError        = Color(0xFF4C0519);
-  static const darkErrorContainer = Color(0xFF9F1239);
-  static const darkOnErrorContainer = Color(0xFFFFE4E6);
+  static const darkError          = Color(0xFFF87171);   // Polaris dark --color-danger
+  static const darkOnError        = Color(0xFF7F1D1D);
+  static const darkErrorContainer = Color(0xFF991B1B);
+  static const darkOnErrorContainer = Color(0xFFFEE2E2);
 
-  static const darkSurface        = Color(0xFF0B0D14);
-  static const darkOnSurface      = Color(0xFFE6E6F0);
-  static const darkSurfaceDim     = Color(0xFF080A11);
-  static const darkSurfaceBright  = Color(0xFF24262F);
+  static const darkSurface        = Color(0xFF0F172A);   // Polaris --bg dark
+  static const darkOnSurface      = Color(0xFFE2E8F0);   // Polaris dark --fg
+  static const darkSurfaceDim     = Color(0xFF0B1324);   // Polaris --surface-sunken dark
+  static const darkSurfaceBright  = Color(0xFF1E293B);
   static const darkSurfaceContainerLowest = Color(0xFF06080F);
-  static const darkSurfaceContainerLow    = Color(0xFF12141C);
-  static const darkSurfaceContainer       = Color(0xFF181A23);
+  static const darkSurfaceContainerLow    = Color(0xFF12141C); // Polaris --surface-soft dark
+  static const darkSurfaceContainer       = Color(0xFF1E293B); // Polaris --surface dark
   static const darkSurfaceContainerHigh   = Color(0xFF22242E);
-  static const darkSurfaceContainerHighest = Color(0xFF2D2F3A);
-  static const darkOnSurfaceVariant = Color(0xFFA8AABB);
-  static const darkOutline        = Color(0xFF6B6D7E);
-  static const darkOutlineVariant = Color(0xFF353742);
+  static const darkSurfaceContainerHighest = Color(0xFF334155); // Polaris dark --outline
+  static const darkOnSurfaceVariant = Color(0xFF94A3B8);        // Polaris dark --fg-muted
+  static const darkOutline        = Color(0xFF475569);          // Polaris dark --fg-subtle
+  static const darkOutlineVariant = Color(0xFF334155);          // Polaris dark --divider
 
-  // ── Semantic accents (live on AppPalette extension) ──────────────────────
-  static const successLight = Color(0xFF10B981);
-  static const successDark  = Color(0xFF34D399);
-  static const warningLight = Color(0xFFF59E0B);
-  static const warningDark  = Color(0xFFFBBF24);
-  static const infoLight    = Color(0xFF0EA5E9);
-  static const infoDark     = Color(0xFF38BDF8);
+  // ── Semantic accents — Polaris tokens ────────────────────────────────────
+  static const successLight = Color(0xFF16A34A);  // Polaris --color-success
+  static const successDark  = Color(0xFF22C55E);  // Polaris dark --color-success
+  static const warningLight = Color(0xFFF59E0B);  // Polaris --color-warning
+  static const warningDark  = Color(0xFFFBBF24);  // Polaris dark --color-warning
+  static const infoLight    = Color(0xFF0EA5E9);  // Polaris --color-info
+  static const infoDark     = Color(0xFF38BDF8);  // Polaris dark --color-info
 
-  // ── Role colors (parent / teacher / student / driver dashboards) ─────────
-  // Used for tinting role-specific home cards / role badges in the More grid.
-  static const roleStudent  = Color(0xFF3B82F6); // blue-500
-  static const roleTeacher  = Color(0xFF8B5CF6); // violet-500
-  static const roleParent   = Color(0xFFEC4899); // pink-500
-  static const roleDriver   = Color(0xFFF59E0B); // amber-500
-  static const roleAdmin    = Color(0xFF14B8A6); // teal-500
+  // ── Role colors — Polaris role tokens ────────────────────────────────────
+  static const roleStudent  = Color(0xFF3B82F6); // Polaris --role-student-start (blue-500)
+  static const roleTeacher  = Color(0xFF8B5CF6); // Polaris --role-teacher-start (violet-500)
+  static const roleParent   = Color(0xFF059669); // Polaris --role-parent-start (emerald-600)
+  static const roleDriver   = Color(0xFFF59E0B); // Polaris --role-driver-start (amber-500)
+  static const roleAdmin    = Color(0xFF4F46E5); // Polaris --brand-primary (indigo-600)
 }
 
 /// Theme extension that exposes the semantic accents not present on
@@ -143,24 +141,24 @@ class AppPalette extends ThemeExtension<AppPalette> {
   static const light = AppPalette(
     success: AppColors.successLight,
     onSuccess: Colors.white,
-    successContainer: Color(0xFFD1FAE5),
-    onSuccessContainer: Color(0xFF064E3B),
+    successContainer: Color(0xFFDCFCE7),  // Polaris --color-success-soft
+    onSuccessContainer: Color(0xFF14532D),
     warning: AppColors.warningLight,
     onWarning: Colors.white,
-    warningContainer: Color(0xFFFEF3C7),
+    warningContainer: Color(0xFFFEF3C7),  // Polaris --color-warning-soft
     onWarningContainer: Color(0xFF78350F),
     info: AppColors.infoLight,
     onInfo: Colors.white,
-    infoContainer: Color(0xFFE0F2FE),
+    infoContainer: Color(0xFFE0F2FE),     // Polaris --color-info-soft
     onInfoContainer: Color(0xFF0C4A6E),
-    brandGradient: [Color(0xFF6366F1), Color(0xFFEC4899)],
+    brandGradient: [Color(0xFF6366F1), Color(0xFF8B5CF6)], // Polaris --brand-gradient
   );
 
   static const dark = AppPalette(
     success: AppColors.successDark,
-    onSuccess: Color(0xFF064E3B),
-    successContainer: Color(0xFF047857),
-    onSuccessContainer: Color(0xFFD1FAE5),
+    onSuccess: Color(0xFF14532D),
+    successContainer: Color(0xFF166534),
+    onSuccessContainer: Color(0xFFDCFCE7),
     warning: AppColors.warningDark,
     onWarning: Color(0xFF78350F),
     warningContainer: Color(0xFFB45309),
@@ -169,7 +167,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     onInfo: Color(0xFF0C4A6E),
     infoContainer: Color(0xFF0369A1),
     onInfoContainer: Color(0xFFE0F2FE),
-    brandGradient: [Color(0xFF818CF8), Color(0xFFF472B6)],
+    brandGradient: [Color(0xFF818CF8), Color(0xFFA5B4FC)], // Polaris dark brand gradient
   );
 
   @override

@@ -43,12 +43,29 @@ class StudentHomeScreen extends StatelessWidget {
                   final name = state is DashboardLoaded
                       ? state.dashboard.name.split(' ').first
                       : '';
+                  final loaded = state is DashboardLoaded;
                   return GradientHero(
                     greeting:
                         'Good ${_greeting()}${name.isNotEmpty ? ', $name' : ''}',
                     subtitle:
                         DateFormat('EEEE, d MMMM').format(DateTime.now()),
                     colors: _kHeroGradient,
+                    stats: loaded
+                        ? [
+                            HeroStat(
+                              value: '${state.dashboard.todayClassesCount}',
+                              label: 'Classes today',
+                            ),
+                            HeroStat(
+                              value: '${state.dashboard.upcomingHomeworkCount}',
+                              label: 'Due this week',
+                            ),
+                            HeroStat(
+                              value: '${state.dashboard.attendancePercent.toStringAsFixed(0)}%',
+                              label: 'Attendance',
+                            ),
+                          ]
+                        : null,
                     trailing: Container(
                       width: 42,
                       height: 42,
@@ -253,17 +270,29 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Expanded(
-      child: AppCard.filled(
-        color: color.withValues(alpha: 0.10),
+      child: Container(
         padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: Radii.mdRadius,
+          border: Border.all(color: cs.outlineVariant),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.18),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: Radii.smRadius,
               ),
               child: Icon(icon, color: color, size: 18),
@@ -273,14 +302,14 @@ class _StatCard extends StatelessWidget {
               value,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: color,
+                    color: cs.onSurface,
                   ),
             ),
             const SizedBox(height: 2),
             Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: color.withValues(alpha: 0.85),
+                    color: cs.onSurfaceVariant,
                   ),
             ),
           ],
@@ -409,8 +438,8 @@ class _CalendarTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const color = Color(0xFF3B82F6);
-    return AppCard.filled(
-      color: color.withValues(alpha: 0.08),
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
       onTap: () {
         final studentId = context.currentRoleId;
         final repo =
@@ -424,32 +453,47 @@ class _CalendarTile extends StatelessWidget {
           ),
         );
       },
-      child: Row(children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
-            borderRadius: Radii.smRadius,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: Radii.mdRadius,
+          border: Border.all(color: cs.outlineVariant),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: Radii.smRadius,
+            ),
+            child: const Icon(Icons.event_note_rounded, color: color, size: 22),
           ),
-          child: const Icon(Icons.event_note_rounded, color: color, size: 22),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text(
-              'Assessment Calendar',
-              style: TextStyle(
-                  fontWeight: FontWeight.w800, fontSize: 14, color: color),
-            ),
-            Text(
-              'Upcoming exams, quizzes & homework',
-              style: TextStyle(
-                  fontSize: 12, color: color.withValues(alpha: 0.80)),
-            ),
-          ]),
-        ),
-        const Icon(Icons.chevron_right_rounded, color: color),
-      ]),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(
+                'Assessment Calendar',
+                style: TextStyle(
+                    fontWeight: FontWeight.w800, fontSize: 14, color: cs.onSurface),
+              ),
+              Text(
+                'Upcoming exams, quizzes & homework',
+                style: TextStyle(
+                    fontSize: 12, color: cs.onSurfaceVariant),
+              ),
+            ]),
+          ),
+          Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant),
+        ]),
+      ),
     );
   }
 }

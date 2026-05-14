@@ -1,14 +1,177 @@
-* {
+/* ─── Polaris School Design System — tokens ─────────────────────────────── */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/Inter-VariableFont.woff2') format('woff2-variations');
+}
+
+:root {
+  /* Brand */
+  --brand-primary       : #4f46e5;
+  --brand-primary-hover : #4338ca;
+  --brand-primary-soft  : #eef2ff;
+  --brand-grad-start    : #6366f1;
+  --brand-grad-end      : #8b5cf6;
+  --brand-gradient      : linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+
+  /* Role gradients */
+  --role-parent         : linear-gradient(135deg, #059669 0%, #0891b2 100%);
+  --role-teacher        : linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  --role-student        : linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  --role-driver         : linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+  --role-admin          : var(--brand-gradient);
+
+  /* Semantic */
+  --color-success       : #16a34a;
+  --color-success-soft  : #dcfce7;
+  --color-warning       : #f59e0b;
+  --color-warning-soft  : #fef3c7;
+  --color-danger        : #dc2626;
+  --color-danger-soft   : #fee2e2;
+  --color-info          : #0ea5e9;
+  --color-info-soft     : #e0f2fe;
+
+  /* Surfaces */
+  --bg                  : #f5f7fb;
+  --bg-elevated         : #ffffff;
+  --surface             : #ffffff;
+  --surface-soft        : #f7f7fb;
+  --surface-sunken      : #eef0f4;
+  --divider             : #eef0f4;
+  --outline             : #e3e3ec;
+  --outline-strong      : #cbd5e1;
+
+  /* Foreground */
+  --fg                  : #0f172a;
+  --fg-strong           : #020617;
+  --fg-muted            : #475569;
+  --fg-subtle           : #64748b;
+  --fg-faint            : #94a3b8;
+  --fg-on-brand         : #ffffff;
+
+  /* Shadows */
+  --shadow-card         : 0 2px 8px rgba(19,26,51,.06), 0 1px 2px rgba(19,26,51,.03);
+  --shadow-hover        : 0 8px 24px rgba(19,26,51,.10), 0 2px 6px rgba(19,26,51,.05);
+  --shadow-popover      : 0 12px 32px rgba(19,26,51,.13);
+  --shadow-brand        : 0 8px 20px rgba(99,102,241,.30);
+
+  /* Radii */
+  --radius-xs           : 6px;
+  --radius-sm           : 8px;
+  --radius-md           : 10px;
+  --radius-lg           : 12px;
+  --radius-xl           : 20px;
+  --radius-2xl          : 28px;
+  --radius-pill         : 999px;
+
+  /* Spacing */
+  --sp-1  : 2px;
+  --sp-2  : 4px;
+  --sp-3  : 8px;
+  --sp-4  : 12px;
+  --sp-5  : 16px;
+  --sp-6  : 20px;
+  --sp-7  : 24px;
+  --sp-8  : 32px;
+  --sp-9  : 48px;
+  --sp-10 : 64px;
+
+  /* Motion */
+  --ease-standard       : cubic-bezier(0.2, 0, 0, 1);
+  --ease-decelerate     : cubic-bezier(0, 0, 0, 1);
+  --ease-accelerate     : cubic-bezier(0.3, 0, 1, 1);
+  --dur-fast            : 120ms;
+  --dur-base            : 200ms;
+  --dur-slow            : 320ms;
+
+  /* Typography */
+  --font-sans : 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono : ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+}
+
+/* ─── Base ──────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+html, body {
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Ant Design overrides */
-.ant-layout-sider {
-  background: #001529 !important;
+/* Tabular figures for stats/numbers */
+table, .stat, .currency, .percentage {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Scrollbar polish ──────────────────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--outline-strong); border-radius: var(--radius-pill); }
+::-webkit-scrollbar-thumb:hover { background: var(--fg-faint); }
+
+/* ─── Ant Design — light surface overrides ──────────────────────────────── */
+
+.ant-layout { background: var(--bg) !important; }
+.ant-layout-content { background: transparent !important; }
+
+/* Card elevation using design system shadow */
+.ant-card {
+  box-shadow: var(--shadow-card) !important;
+  transition: box-shadow var(--dur-base) var(--ease-standard) !important;
+}
+.ant-card:hover {
+  box-shadow: var(--shadow-hover) !important;
+}
+
+/* Table header */
+.ant-table-thead > tr > th {
+  background: var(--surface-soft) !important;
+  color: var(--fg-muted) !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.2px !important;
+  border-bottom: 1px solid var(--divider) !important;
+}
+.ant-table-tbody > tr > td {
+  border-bottom: 1px solid var(--divider) !important;
+}
+.ant-table-tbody > tr:hover > td {
+  background: var(--surface-soft) !important;
+}
+
+/* Header */
+.ant-layout-header {
+  border-bottom: 1px solid var(--divider) !important;
+  box-shadow: 0 1px 4px rgba(19,26,51,.04) !important;
+}
+
+/* Breadcrumb */
+.ant-breadcrumb { font-size: 13px !important; }
+
+/* Statistic */
+.ant-statistic-title { color: var(--fg-muted) !important; font-weight: 500 !important; }
+
+/* Button focus ring using brand color */
+.ant-btn:focus-visible {
+  outline: 2px solid var(--brand-primary) !important;
+  outline-offset: 2px !important;
+}
+
+/* Menu active item indicator */
+.ant-menu-item-selected::after {
+  border-color: var(--brand-primary) !important;
 }

@@ -1,26 +1,13 @@
 import 'package:first_try/core/theme/theme.dart';
-import 'package:first_try/core/widgets/calendar/assessment_calendar_screen.dart';
 import 'package:first_try/core/widgets/ui/ui.dart';
 import 'package:first_try/features/teacher/data/models/teacher_models.dart';
 import 'package:first_try/features/teacher/presentation/screens/teacher_notifications_screen.dart';
-import 'package:first_try/features/teacher/presentation/cubit/teacher_availability_cubit.dart';
-import 'package:first_try/features/teacher/presentation/cubit/teacher_behavior_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_dashboard_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_dashboard_state.dart';
-import 'package:first_try/features/teacher/presentation/cubit/teacher_messages_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_notifications_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_notifications_state.dart';
-import 'package:first_try/features/teacher/presentation/cubit/teacher_performance_cubit.dart';
-import 'package:first_try/features/teacher/presentation/cubit/teacher_salary_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_schedule_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_schedule_state.dart';
-import 'package:first_try/features/teacher/presentation/cubit/teacher_vacation_cubit.dart';
-import 'package:first_try/features/teacher/presentation/screens/teacher_availability_screen.dart';
-import 'package:first_try/features/teacher/presentation/screens/teacher_behavior_screen.dart';
-import 'package:first_try/features/teacher/presentation/screens/teacher_messages_screen.dart';
-import 'package:first_try/features/teacher/presentation/screens/teacher_performance_screen.dart';
-import 'package:first_try/features/teacher/presentation/screens/teacher_salary_screen.dart';
-import 'package:first_try/features/teacher/presentation/screens/teacher_vacation_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -59,12 +46,29 @@ class TeacherHomeScreen extends StatelessWidget {
                       final count = notifState is TeacherNotificationsLoaded
                           ? notifState.unreadCount
                           : 0;
+                      final loaded = dashState is TeacherDashboardLoaded;
                       return GradientHero(
                         greeting:
                             'Good ${_greeting()}${name.isNotEmpty ? ', $name' : ''}',
                         subtitle: DateFormat('EEEE, d MMMM')
                             .format(DateTime.now()),
                         colors: _kHeroGradient,
+                        stats: loaded
+                            ? [
+                                HeroStat(
+                                  value: '${dashState.dashboard.todayClassesCount}',
+                                  label: 'Classes today',
+                                ),
+                                HeroStat(
+                                  value: '${dashState.dashboard.pendingGradingCount}',
+                                  label: 'To grade',
+                                ),
+                                HeroStat(
+                                  value: '$count',
+                                  label: 'Alerts',
+                                ),
+                              ]
+                            : null,
                         trailing: _NotifBell(
                           count: count,
                           onTap: () {
@@ -225,12 +229,6 @@ class TeacherHomeScreen extends StatelessWidget {
               },
             ),
 
-            // ── More grid ─────────────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: SectionHeader(title: 'More'),
-            ),
-            SliverToBoxAdapter(child: _MoreGrid()),
-
             // ── Bottom safe-area spacer ───────────────────────────────────
             SliverToBoxAdapter(
               child: Builder(
@@ -324,17 +322,29 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Expanded(
-      child: AppCard.filled(
-        color: color.withValues(alpha: 0.10),
+      child: Container(
         padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: Radii.mdRadius,
+          border: Border.all(color: cs.outlineVariant),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.18),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: Radii.smRadius,
               ),
               child: Icon(icon, color: color, size: 18),
@@ -344,14 +354,14 @@ class _StatCard extends StatelessWidget {
               value,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: color,
+                    color: cs.onSurface,
                   ),
             ),
             const SizedBox(height: 2),
             Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: color.withValues(alpha: 0.85),
+                    color: cs.onSurfaceVariant,
                   ),
             ),
           ],
@@ -455,146 +465,3 @@ class _NotifTile extends StatelessWidget {
   }
 }
 
-class _MoreGrid extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final items = <_MoreItem>[
-      _MoreItem(
-        icon: Icons.mail_outline_rounded,
-        label: 'Messages',
-        color: const Color(0xFF6366F1),
-        builder: (ctx) => BlocProvider.value(
-          value: ctx.read<TeacherMessagesCubit>(),
-          child: const TeacherMessagesScreen(),
-        ),
-      ),
-      _MoreItem(
-        icon: Icons.assignment_outlined,
-        label: 'Behavior',
-        color: const Color(0xFFF59E0B),
-        builder: (ctx) => BlocProvider.value(
-          value: ctx.read<TeacherBehaviorCubit>(),
-          child: const TeacherBehaviorScreen(),
-        ),
-      ),
-      _MoreItem(
-        icon: Icons.insights_rounded,
-        label: 'Performance',
-        color: const Color(0xFF10B981),
-        builder: (ctx) => BlocProvider.value(
-          value: ctx.read<TeacherPerformanceCubit>(),
-          child: const TeacherPerformanceScreen(),
-        ),
-      ),
-      _MoreItem(
-        icon: Icons.payments_outlined,
-        label: 'Salary',
-        color: const Color(0xFF0891B2),
-        builder: (ctx) => BlocProvider.value(
-          value: ctx.read<TeacherSalaryCubit>(),
-          child: const TeacherSalaryScreen(),
-        ),
-      ),
-      _MoreItem(
-        icon: Icons.beach_access_rounded,
-        label: 'Vacation',
-        color: const Color(0xFF8B5CF6),
-        builder: (ctx) => BlocProvider.value(
-          value: ctx.read<TeacherVacationCubit>(),
-          child: const TeacherVacationScreen(),
-        ),
-      ),
-      _MoreItem(
-        icon: Icons.schedule_rounded,
-        label: 'Availability',
-        color: const Color(0xFF3B82F6),
-        builder: (ctx) => BlocProvider.value(
-          value: ctx.read<TeacherAvailabilityCubit>(),
-          child: const TeacherAvailabilityScreen(),
-        ),
-      ),
-      _MoreItem(
-        icon: Icons.event_note_rounded,
-        label: 'Calendar',
-        color: const Color(0xFFEC4899),
-        builder: (ctx) {
-          final repo = ctx.read<TeacherDashboardCubit>().repo;
-          return AssessmentCalendarScreen(
-            title: 'Assessment Calendar',
-            fetcher: repo.getAssessmentCalendar,
-          );
-        },
-      ),
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      child: GridView.count(
-        crossAxisCount: 3,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        childAspectRatio: 1.0,
-        children: [for (final item in items) _MoreTile(item: item)],
-      ),
-    );
-  }
-}
-
-class _MoreItem {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final WidgetBuilder builder;
-  const _MoreItem({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.builder,
-  });
-}
-
-class _MoreTile extends StatelessWidget {
-  final _MoreItem item;
-  const _MoreTile({required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard.filled(
-      color: item.color.withValues(alpha: 0.10),
-      padding: const EdgeInsets.all(10),
-      onTap: () {
-        // Build using the OUTER context (shell's MultiBlocProvider descendant)
-        // before pushing, so the new route can't see the shell providers.
-        final screen = item.builder(context);
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => screen),
-        );
-      },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: item.color.withValues(alpha: 0.18),
-              borderRadius: Radii.smRadius,
-            ),
-            child: Icon(item.icon, color: item.color, size: 22),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            item.label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11,
-              color: item.color,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

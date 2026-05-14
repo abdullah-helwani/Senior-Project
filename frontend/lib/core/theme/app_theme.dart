@@ -96,10 +96,24 @@ class AppTheme {
   // ── Builder ──────────────────────────────────────────────────────────────
 
   static ThemeData _build(ColorScheme cs, Brightness brightness) {
-    final tt = AppTypography.build(
-      onSurface: cs.onSurface,
-      onSurfaceVariant: cs.onSurfaceVariant,
-    );
+    final baseTheme = ThemeData(brightness: brightness);
+    final tt = AppTypography.googleFontsTextTheme(baseTheme.textTheme).copyWith(
+      displayLarge:  AppTypography.googleFontsTextTheme(baseTheme.textTheme).displayLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.8),
+      displayMedium: AppTypography.googleFontsTextTheme(baseTheme.textTheme).displayMedium?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.6),
+      displaySmall:  AppTypography.googleFontsTextTheme(baseTheme.textTheme).displaySmall?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.4),
+      headlineLarge:  AppTypography.googleFontsTextTheme(baseTheme.textTheme).headlineLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.4),
+      headlineMedium: AppTypography.googleFontsTextTheme(baseTheme.textTheme).headlineMedium?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.2),
+      headlineSmall:  AppTypography.googleFontsTextTheme(baseTheme.textTheme).headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+      titleLarge:  AppTypography.googleFontsTextTheme(baseTheme.textTheme).titleLarge?.copyWith(fontWeight: FontWeight.w700),
+      titleMedium: AppTypography.googleFontsTextTheme(baseTheme.textTheme).titleMedium?.copyWith(fontWeight: FontWeight.w700),
+      titleSmall:  AppTypography.googleFontsTextTheme(baseTheme.textTheme).titleSmall?.copyWith(fontWeight: FontWeight.w600),
+      bodyLarge:   AppTypography.googleFontsTextTheme(baseTheme.textTheme).bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+      bodyMedium:  AppTypography.googleFontsTextTheme(baseTheme.textTheme).bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+      bodySmall:   AppTypography.googleFontsTextTheme(baseTheme.textTheme).bodySmall?.copyWith(fontWeight: FontWeight.w500, color: cs.onSurfaceVariant),
+      labelLarge:  AppTypography.googleFontsTextTheme(baseTheme.textTheme).labelLarge?.copyWith(fontWeight: FontWeight.w700),
+      labelMedium: AppTypography.googleFontsTextTheme(baseTheme.textTheme).labelMedium?.copyWith(fontWeight: FontWeight.w700),
+      labelSmall:  AppTypography.googleFontsTextTheme(baseTheme.textTheme).labelSmall?.copyWith(fontWeight: FontWeight.w700, color: cs.onSurfaceVariant),
+    ).apply(bodyColor: cs.onSurface, displayColor: cs.onSurface);
     final isDark = brightness == Brightness.dark;
 
     return ThemeData(

@@ -25,6 +25,11 @@ class DriverHomeScreen extends StatelessWidget {
               greeting: 'Good ${_greeting()}, Driver',
               subtitle: DateFormat('EEEE, d MMMM').format(DateTime.now()),
               colors: _kHeroGradient,
+              stats: const [
+                HeroStat(value: '—', label: 'Trips today'),
+                HeroStat(value: '—', label: 'Students'),
+                HeroStat(value: '—', label: 'On route'),
+              ],
               trailing: GestureDetector(
                 onTap: () => context.read<AuthCubit>().logout(),
                 child: Container(

@@ -418,7 +418,7 @@ export default function Students() {
             <Descriptions.Item label="Account">
               <Badge status={viewStudent.user.is_active ? 'success' : 'error'} text={viewStudent.user.is_active ? 'Active' : 'Inactive'} />
             </Descriptions.Item>
-            {viewStudent.enrollments && (
+            {(viewStudent as unknown as { enrollments?: unknown[] }).enrollments && (
               <Descriptions.Item label="Enrollments" span={2}>
                 {(viewStudent as unknown as { enrollments: Array<{ section: { name: string; school_class: { name: string; school_year?: { name: string } } } }> }).enrollments.map((e, i) => (
                   <Tag key={i}>{e.section.school_class.name} — {e.section.name} {e.section.school_class.school_year ? `(${e.section.school_class.school_year.name})` : ''}</Tag>

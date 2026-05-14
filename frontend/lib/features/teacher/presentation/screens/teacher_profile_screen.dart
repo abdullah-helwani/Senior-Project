@@ -1,4 +1,5 @@
 import 'package:first_try/core/theme/theme.dart';
+import 'package:first_try/core/widgets/calendar/assessment_calendar_screen.dart';
 import 'package:first_try/core/widgets/shared/change_password_modal.dart';
 import 'package:first_try/core/widgets/shared/error_view.dart';
 import 'package:first_try/core/widgets/shared/loading_view.dart';
@@ -7,10 +8,23 @@ import 'package:first_try/core/widgets/shared/profile_avatar_picker.dart';
 import 'package:first_try/core/widgets/ui/ui.dart';
 import 'package:first_try/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:first_try/features/teacher/data/models/teacher_models.dart';
+import 'package:first_try/features/teacher/presentation/cubit/teacher_attendance_cubit.dart';
+import 'package:first_try/features/teacher/presentation/cubit/teacher_availability_cubit.dart';
+import 'package:first_try/features/teacher/presentation/cubit/teacher_behavior_cubit.dart';
+import 'package:first_try/features/teacher/presentation/cubit/teacher_dashboard_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_notifications_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_notifications_state.dart';
+import 'package:first_try/features/teacher/presentation/cubit/teacher_performance_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_profile_cubit.dart';
 import 'package:first_try/features/teacher/presentation/cubit/teacher_profile_state.dart';
+import 'package:first_try/features/teacher/presentation/cubit/teacher_salary_cubit.dart';
+import 'package:first_try/features/teacher/presentation/cubit/teacher_vacation_cubit.dart';
+import 'package:first_try/features/teacher/presentation/screens/teacher_attendance_screen.dart';
+import 'package:first_try/features/teacher/presentation/screens/teacher_availability_screen.dart';
+import 'package:first_try/features/teacher/presentation/screens/teacher_behavior_screen.dart';
+import 'package:first_try/features/teacher/presentation/screens/teacher_performance_screen.dart';
+import 'package:first_try/features/teacher/presentation/screens/teacher_salary_screen.dart';
+import 'package:first_try/features/teacher/presentation/screens/teacher_vacation_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -155,6 +169,76 @@ class _ProfileTab extends StatelessWidget {
               icon: Icons.phone_rounded,
               label: 'Phone',
               value: profile.phone ?? '—'),
+        ]),
+        const SizedBox(height: 12),
+
+        _SectionCard(title: 'Quick Links', children: [
+          _NavRow(
+            icon: Icons.fact_check_rounded,
+            label: 'Attendance',
+            color: const Color(0xFF6366F1),
+            onTap: (ctx) => BlocProvider.value(
+              value: ctx.read<TeacherAttendanceCubit>(),
+              child: const TeacherAttendanceScreen(),
+            ),
+          ),
+          _NavRow(
+            icon: Icons.assignment_outlined,
+            label: 'Behavior',
+            color: const Color(0xFFF59E0B),
+            onTap: (ctx) => BlocProvider.value(
+              value: ctx.read<TeacherBehaviorCubit>(),
+              child: const TeacherBehaviorScreen(),
+            ),
+          ),
+          _NavRow(
+            icon: Icons.insights_rounded,
+            label: 'Performance',
+            color: const Color(0xFF10B981),
+            onTap: (ctx) => BlocProvider.value(
+              value: ctx.read<TeacherPerformanceCubit>(),
+              child: const TeacherPerformanceScreen(),
+            ),
+          ),
+          _NavRow(
+            icon: Icons.payments_outlined,
+            label: 'Salary',
+            color: const Color(0xFF0891B2),
+            onTap: (ctx) => BlocProvider.value(
+              value: ctx.read<TeacherSalaryCubit>(),
+              child: const TeacherSalaryScreen(),
+            ),
+          ),
+          _NavRow(
+            icon: Icons.beach_access_rounded,
+            label: 'Vacation',
+            color: const Color(0xFF8B5CF6),
+            onTap: (ctx) => BlocProvider.value(
+              value: ctx.read<TeacherVacationCubit>(),
+              child: const TeacherVacationScreen(),
+            ),
+          ),
+          _NavRow(
+            icon: Icons.schedule_rounded,
+            label: 'Availability',
+            color: const Color(0xFF3B82F6),
+            onTap: (ctx) => BlocProvider.value(
+              value: ctx.read<TeacherAvailabilityCubit>(),
+              child: const TeacherAvailabilityScreen(),
+            ),
+          ),
+          _NavRow(
+            icon: Icons.event_note_rounded,
+            label: 'Assessment Calendar',
+            color: const Color(0xFFEC4899),
+            onTap: (ctx) {
+              final repo = ctx.read<TeacherDashboardCubit>().repo;
+              return AssessmentCalendarScreen(
+                title: 'Assessment Calendar',
+                fetcher: repo.getAssessmentCalendar,
+              );
+            },
+          ),
         ]),
         const SizedBox(height: 24),
 
@@ -424,6 +508,54 @@ class _InfoRow extends StatelessWidget {
                 textAlign: TextAlign.end),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _NavRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final Widget Function(BuildContext ctx) onTap;
+  const _NavRow({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        final screen = onTap(context);
+        Navigator.of(context)
+            .push(MaterialPageRoute(builder: (_) => screen));
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 16, color: color),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(label,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600)),
+            ),
+            Icon(Icons.chevron_right_rounded,
+                size: 18,
+                color: Theme.of(context).colorScheme.onSurfaceVariant),
+          ],
+        ),
       ),
     );
   }
