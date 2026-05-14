@@ -96,7 +96,7 @@ export default function Complaints() {
     },
     {
       title: 'Student', key: 'student',
-      render: (_: unknown, r: Complaint) => r.student?.user?.name || `#${r.student_id}`,
+      render: (_: unknown, r: Complaint) => r.student?.user?.name || (r.student_id ? `#${r.student_id}` : '—'),
     },
     {
       title: 'Actions', key: 'actions', width: 100,
@@ -145,7 +145,7 @@ export default function Complaints() {
                 <Tag color={STATUS_COLORS[selected.status]}>{selected.status.replace('_', ' ').toUpperCase()}</Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Parent">{selected.guardian?.user?.name || `#${selected.parent_id}`}</Descriptions.Item>
-              <Descriptions.Item label="Student">{selected.student?.user?.name || `#${selected.student_id}`}</Descriptions.Item>
+              <Descriptions.Item label="Student">{selected.student?.user?.name || (selected.student_id ? `#${selected.student_id}` : '—')}</Descriptions.Item>
               <Descriptions.Item label="Subject" span={2}>{selected.subject}</Descriptions.Item>
               <Descriptions.Item label="Message" span={2}>
                 <span style={{ whiteSpace: 'pre-wrap' }}>{selected.body}</span>

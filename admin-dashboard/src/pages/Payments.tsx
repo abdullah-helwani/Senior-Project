@@ -31,8 +31,12 @@ interface Payment {
 }
 
 interface Invoice {
-  invoice_id: number; totalamount: string | number; status: string;
-  account?: { student_id: number; student?: { user?: { name: string } }; feePlan?: { name: string } };
+  invoice_id: number;
+  totalamount: string | number;
+  status: string;
+  student_name?: string | null;
+  fee_plan_name?: string | null;
+  remaining?: number;
 }
 
 interface Guardian { parent_id: number; user?: { name: string } }
@@ -216,10 +220,13 @@ export default function Payments() {
           <Form.Item name="invoice_id" label="Invoice" rules={[{ required: true }]}>
             <Select showSearch optionFilterProp="label"
               onChange={(v) => onInvoiceChange(v as number)}
-              options={invoices.map((i) => ({
-                value: i.invoice_id,
-                label: `#${i.invoice_id} — ${i.account?.student?.user?.name || ''} — $${Number(i.totalamount).toFixed(2)} (${i.status})`,
-              }))}
+              options={invoices.map((i) => {
+                const rem = i.remaining ?? Number(i.totalamount);
+                return {
+                  value: i.invoice_id,
+                  label: `INV-${String(i.invoice_id).padStart(5, '0')} · ${i.student_name || '—'} · ${i.fee_plan_name || ''} · Remaining $${Number(rem).toFixed(2)} (${i.status})`,
+                };
+              })}
             />
           </Form.Item>
           <Form.Item

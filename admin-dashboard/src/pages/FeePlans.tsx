@@ -13,8 +13,8 @@ interface FeePlan {
   schoolyear_id: number;
   name: string;
   totalamount: string | number;
-  schoolYear?: { schoolyearid: number; name: string };
-  studentFeePlans?: { account_id: number; student?: { student_id: number; user?: { name: string } } }[];
+  school_year?: { schoolyearid: number; name: string };
+  studentFeePlans?: { account_id: number; student?: { id: number; user?: { name: string } } }[];
 }
 
 interface SchoolYear { schoolyearid: number; name: string }
@@ -111,7 +111,7 @@ export default function FeePlans() {
     { title: 'Name', dataIndex: 'name', key: 'name' },
     {
       title: 'School Year', key: 'year',
-      render: (_: unknown, r: FeePlan) => r.schoolYear?.name || `#${r.schoolyear_id}`,
+      render: (_: unknown, r: FeePlan) => r.school_year?.name || `#${r.schoolyear_id}`,
     },
     {
       title: 'Total Amount', dataIndex: 'totalamount', key: 'amount', width: 160,
@@ -176,7 +176,7 @@ export default function FeePlans() {
           <>
             <Descriptions column={1} bordered size="small" style={{ marginBottom: 16 }}>
               <Descriptions.Item label="Name">{selected.name}</Descriptions.Item>
-              <Descriptions.Item label="School Year">{selected.schoolYear?.name || `#${selected.schoolyear_id}`}</Descriptions.Item>
+              <Descriptions.Item label="School Year">{selected.school_year?.name || `#${selected.schoolyear_id}`}</Descriptions.Item>
               <Descriptions.Item label="Total Amount">${Number(selected.totalamount).toFixed(2)}</Descriptions.Item>
               <Descriptions.Item label="Assigned Students">{selected.studentFeePlans?.length || 0}</Descriptions.Item>
             </Descriptions>
@@ -184,7 +184,7 @@ export default function FeePlans() {
               <Table
                 dataSource={selected.studentFeePlans} rowKey="account_id" size="small" pagination={{ pageSize: 10 }}
                 columns={[
-                  { title: 'Student', key: 'student', render: (_: unknown, r) => r.student?.user?.name || `#${r.student?.student_id}` },
+                  { title: 'Student', key: 'student', render: (_: unknown, r) => r.student?.user?.name || `#${r.student?.id}` },
                 ]}
               />
             )}

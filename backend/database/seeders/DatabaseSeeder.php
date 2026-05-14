@@ -379,7 +379,7 @@ class DatabaseSeeder extends Seeder
             [
                 'parent_id' => $parentId, 'student_id' => $student1Id,
                 'subject' => 'Bullying Incident',
-                'body' => 'My son Ali reported being bullied during recess. Please investigate.',
+                'body' => 'My son Karim reported being bullied during recess. Please investigate.',
                 'status' => 'open', 'admin_reply' => null, 'resolved_at' => null,
                 'created_at' => $now->copy()->subDay(), 'updated_at' => $now->copy()->subDay(),
             ],
