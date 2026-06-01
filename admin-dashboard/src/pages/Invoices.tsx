@@ -1,17 +1,17 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Table, Button, Select, Modal, Form, Input, InputNumber, Card, Typography,
-  Row, Col, Space, Tag, Tooltip, Divider, Descriptions, DatePicker, Checkbox, message,
+  Row, Col, Space, Tag, Tooltip, Divider, DatePicker, Checkbox, message,
 } from 'antd';
 import {
-  PrinterOutlined, EyeOutlined, DollarOutlined, CheckCircleOutlined,
-  WarningOutlined, FileTextOutlined,
+  PrinterOutlined, DollarOutlined, CheckCircleOutlined,
+  WarningOutlined, FileTextOutlined, PlusOutlined,
 } from '@ant-design/icons';
 import api from '../api/axios';
 import dayjs, { Dayjs } from 'dayjs';
 
 const { Title, Text } = Typography;
-const { Search } = Input;
+const { Search, TextArea } = Input;
 const { RangePicker } = DatePicker;
 
 const STATUS_COLOR: Record<string, string> = {
@@ -64,6 +64,16 @@ interface InvoiceDocument {
   outstanding: number;
 }
 
+// One selectable fee-plan account (flattened from /student-fee-plans/by-student)
+interface AccountOption {
+  account_id: number;
+  student_name: string;
+  plan_name: string;
+  total: number;
+  balance: number;
+  due_date: string | null;
+}
+
 export default function Invoices() {
   const [rows, setRows]                 = useState<InvoiceRow[]>([]);
   const [loading, setLoading]           = useState(true);
@@ -88,6 +98,13 @@ export default function Invoices() {
   const [payTarget, setPayTarget]       = useState<InvoiceRow | null>(null);
   const [payLoading, setPayLoading]     = useState(false);
   const [payForm] = Form.useForm();
+
+  // Create invoice state
+  const [createOpen, setCreateOpen]         = useState(false);
+  const [createLoading, setCreateLoading]   = useState(false);
+  const [accounts, setAccounts]             = useState<AccountOption[]>([]);
+  const [accountsLoading, setAccountsLoading] = useState(false);
+  const [createForm] = Form.useForm();
 
   // ── Fetch ──
   const fetchRows = useCallback(async () => {
@@ -209,6 +226,76 @@ export default function Invoices() {
     } finally { setPayLoading(false); }
   };
 
+  // ── Create Invoice ──
+  // Pull every student fee-plan account and flatten into selectable options.
+  const fetchAccounts = useCallback(async () => {
+    setAccountsLoading(true);
+    try {
+      const res = await api.get('/admin/student-fee-plans/by-student', { params: { per_page: 500 } });
+      const students = res.data.data || [];
+      const opts: AccountOption[] = [];
+      for (const s of students) {
+        for (const p of s.plans || []) {
+          opts.push({
+            account_id:   p.account_id,
+            student_name: s.student_name,
+            plan_name:    p.plan_name || `Plan #${p.feeplan_id}`,
+            total:        Number(p.total)   || 0,
+            balance:      Number(p.balance) || 0,
+            due_date:     p.due_date || null,
+          });
+        }
+      }
+      setAccounts(opts);
+    } catch { message.error('Failed to load fee accounts'); }
+    finally { setAccountsLoading(false); }
+  }, []);
+
+  const openCreate = () => {
+    createForm.setFieldsValue({
+      account_id:  undefined,
+      issued_date: dayjs(),
+      due_date:    undefined,
+      totalamount: undefined,
+      status:      'unpaid',
+      notes:       undefined,
+    });
+    setCreateOpen(true);
+    if (accounts.length === 0) fetchAccounts();
+  };
+
+  // Prefill amount + due date from the chosen plan
+  const onAccountChange = (accountId: number) => {
+    const acc = accounts.find((a) => a.account_id === accountId);
+    if (!acc) return;
+    createForm.setFieldsValue({
+      totalamount: acc.total > 0 ? acc.total : undefined,
+      due_date:    acc.due_date ? dayjs(acc.due_date) : createForm.getFieldValue('due_date'),
+    });
+  };
+
+  const handleCreate = async (values: Record<string, unknown>) => {
+    setCreateLoading(true);
+    try {
+      await api.post('/admin/invoices', {
+        account_id:  values.account_id,
+        issued_date: values.issued_date ? dayjs(values.issued_date as string).format('YYYY-MM-DD') : undefined,
+        due_date:    dayjs(values.due_date as string).format('YYYY-MM-DD'),
+        totalamount: Number(values.totalamount),
+        status:      values.status || 'unpaid',
+        notes:       (values.notes as string)?.trim() || undefined,
+      });
+      message.success('Invoice created');
+      setCreateOpen(false); createForm.resetFields();
+      setPage(1);
+      fetchRows();
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
+      const firstErr = e.response?.data?.errors ? Object.values(e.response.data.errors)[0]?.[0] : undefined;
+      message.error(firstErr || e.response?.data?.message || 'Failed to create invoice');
+    } finally { setCreateLoading(false); }
+  };
+
   // ── Columns: each row = one billing document ──
   const columns = [
     {
@@ -296,6 +383,11 @@ export default function Invoices() {
           <Text type="secondary" style={{ fontSize: 13 }}>
             <FileTextOutlined /> Billing documents — view, print, record payments
           </Text>
+        </Col>
+        <Col>
+          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+            Add Invoice
+          </Button>
         </Col>
       </Row>
 
@@ -591,6 +683,80 @@ export default function Invoices() {
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={payLoading} block icon={<DollarOutlined />}>
               Record Payment
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* ── Create Invoice Modal ── */}
+      <Modal
+        title={<Space><FileTextOutlined /> Create New Invoice</Space>}
+        open={createOpen}
+        onCancel={() => { setCreateOpen(false); createForm.resetFields(); }}
+        footer={null}
+        width={520}
+      >
+        <Form form={createForm} layout="vertical" onFinish={handleCreate}>
+          <Form.Item
+            name="account_id"
+            label="Student & Fee Plan"
+            rules={[{ required: true, message: 'Please select a fee account' }]}
+          >
+            <Select
+              showSearch
+              loading={accountsLoading}
+              placeholder="Select a student's fee plan account"
+              optionFilterProp="label"
+              onChange={onAccountChange}
+              options={accounts.map((a) => ({
+                value: a.account_id,
+                label: `${a.student_name} · ${a.plan_name} ($${a.total.toFixed(2)})`,
+              }))}
+              notFoundContent={accountsLoading ? 'Loading…' : 'No fee accounts found'}
+            />
+          </Form.Item>
+
+          <Row gutter={12}>
+            <Col span={12}>
+              <Form.Item name="issued_date" label="Issue Date"
+                rules={[{ required: true, message: 'Required' }]}>
+                <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="due_date" label="Due Date"
+                rules={[{ required: true, message: 'Required' }]}>
+                <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={12}>
+            <Col span={12}>
+              <Form.Item name="totalamount" label="Amount ($)"
+                rules={[{ required: true, message: 'Required' }]}>
+                <InputNumber min={0} step={0.01} style={{ width: '100%' }} prefix="$" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="status" label="Status">
+                <Select options={[
+                  { value: 'unpaid',    label: 'Unpaid' },
+                  { value: 'partial',   label: 'Partial' },
+                  { value: 'paid',      label: 'Paid' },
+                  { value: 'cancelled', label: 'Cancelled' },
+                ]} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item name="notes" label="Notes (optional)">
+            <TextArea rows={2} placeholder="e.g. Term 1 tuition installment…" />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0 }}>
+            <Button type="primary" htmlType="submit" loading={createLoading} block icon={<PlusOutlined />}>
+              Create Invoice
             </Button>
           </Form.Item>
         </Form>

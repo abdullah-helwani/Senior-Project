@@ -7,7 +7,7 @@
 //   iOS simulator     →  'http://127.0.0.1:8000'
 //   Physical device   →  'http://192.168.x.x:8000'  ← run `ipconfig` to find your PC's LAN IP
 //                         (both PC and phone must be on the same Wi-Fi)
-const String baseUrl = 'http://localhost:8000';   // ← change this to match your setup
+const String baseUrl = 'http://192.168.137.1:8000';   // ← change this to match your setup
 
 const String _api = '$baseUrl/api';
 

@@ -15,9 +15,11 @@ class StoreInvoiceRequest extends FormRequest
     {
         return [
             'account_id'  => 'required|exists:studentfeeplan,account_id',
+            'issued_date' => 'nullable|date',
             'due_date'    => 'required|date',
             'totalamount' => 'required|numeric|min:0',
             'status'      => 'nullable|in:unpaid,partial,paid,cancelled',
+            'notes'       => 'nullable|string',
         ];
     }
 }

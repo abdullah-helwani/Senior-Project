@@ -22,6 +22,11 @@ class Message extends Model
     {
         return [
             'read_at' => 'datetime',
+            // Encrypted at rest. Laravel transparently decrypts on read and
+            // encrypts on write, so controllers keep using `$message->body`
+            // and `$message->subject` as plain strings.
+            'subject' => 'encrypted',
+            'body'    => 'encrypted',
         ];
     }
 

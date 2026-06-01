@@ -262,7 +262,8 @@ class InvoiceController extends Controller
     {
         $data = $request->validated();
 
-        $data['status'] = $data['status'] ?? 'unpaid';
+        $data['status']      = $data['status'] ?? 'unpaid';
+        $data['issued_date'] = $data['issued_date'] ?? now()->toDateString();
 
         $invoice = Invoice::create($data);
 
