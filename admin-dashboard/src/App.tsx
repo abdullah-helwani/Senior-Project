@@ -15,8 +15,6 @@ import Subjects from './pages/Subjects';
 import Schedules from './pages/Schedules';
 import Assessments from './pages/Assessments';
 import Attendance from './pages/Attendance';
-import BehaviorLogs from './pages/BehaviorLogs';
-import Complaints from './pages/Complaints';
 import Notifications from './pages/Notifications';
 import VacationRequests from './pages/VacationRequests';
 import FeePlans from './pages/FeePlans';
@@ -61,8 +59,6 @@ function AppRoutes() {
         <Route path="/schedules" element={<Schedules />} />
         <Route path="/assessments" element={<Assessments />} />
         <Route path="/attendance" element={<Attendance />} />
-        <Route path="/behavior-logs" element={<BehaviorLogs />} />
-        <Route path="/complaints" element={<Complaints />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/vacation-requests" element={<VacationRequests />} />
         <Route path="/fee-plans" element={<FeePlans />} />

@@ -37,7 +37,7 @@ String? durationToString(Duration? duration) {
 
 //! For upload File
 Future<File?> pickDocument() async {
-  FilePickerResult? result = await FilePicker.platform.pickFiles(
+  FilePickerResult? result = await FilePicker.pickFiles(
     type: FileType.custom,
     allowedExtensions: ['pdf'], // Specify allowed file extensions
   );

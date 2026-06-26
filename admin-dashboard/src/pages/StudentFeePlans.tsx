@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   Table, Button, Select, Input, Modal, Form, InputNumber, DatePicker,
-  Card, Typography, Space, Tag, Descriptions, Statistic, Progress,
+  Card, Typography, Space, Tag, Statistic, Progress,
   Checkbox, Divider, message, Row, Col,
 } from 'antd';
-import { EditOutlined, EyeOutlined, SaveOutlined } from '@ant-design/icons';
+import { EditOutlined, EyeOutlined, SaveOutlined, PlusOutlined } from '@ant-design/icons';
 import api from '../api/axios';
 import dayjs from 'dayjs';
 
@@ -48,6 +48,7 @@ interface StudentRow {
 
 interface FeePlanOpt { feeplan_id: number; name: string; totalamount: string | number }
 interface SchoolYear  { schoolyearid: number; name: string }
+interface StudentOpt  { id: number; name: string }
 
 export default function StudentFeePlans() {
   const [rows, setRows]         = useState<StudentRow[]>([]);
@@ -71,6 +72,20 @@ export default function StudentFeePlans() {
   const [editLoading, setEditLoading] = useState(false);
   const [editTarget, setEditTarget]   = useState<PlanItem | null>(null);
   const [editForm] = Form.useForm();
+
+  // ── Add fee plan modal ──
+  const [createOpen, setCreateOpen]         = useState(false);
+  const [createLoading, setCreateLoading]   = useState(false);
+  const [students, setStudents]             = useState<StudentOpt[]>([]);
+  const [studentsLoading, setStudentsLoading] = useState(false);
+  const [createForm] = Form.useForm();
+
+  // Selected plan's total — drives the "Amount Paid" max + hint
+  const selectedFeePlanId = Form.useWatch('feeplan_id', createForm);
+  const selectedPlanTotal = (() => {
+    const p = allPlans.find((fp) => fp.feeplan_id === selectedFeePlanId);
+    return p ? Number(p.totalamount) : undefined;
+  })();
 
   // ── Fetch ──────────────────────────────────────────────────────────
   const fetchRows = useCallback(async () => {
@@ -223,6 +238,55 @@ export default function StudentFeePlans() {
     } finally { setEditLoading(false); }
   };
 
+  // ── Add fee plan ─────────────────────────────────────────────────
+  const fetchStudents = useCallback(async () => {
+    setStudentsLoading(true);
+    try {
+      const res = await api.get('/admin/students', { params: { per_page: 500 } });
+      const data = res.data.data || res.data || [];
+      setStudents(
+        (Array.isArray(data) ? data : []).map((s: { id: number; user?: { name?: string } }) => ({
+          id: s.id,
+          name: s.user?.name || `#${s.id}`,
+        })),
+      );
+    } catch { message.error('Failed to load students'); }
+    finally { setStudentsLoading(false); }
+  }, []);
+
+  const openCreate = () => {
+    createForm.setFieldsValue({
+      student_id:  undefined,
+      feeplan_id:  undefined,
+      paid_amount: 0,
+      due_date:    undefined,
+      notes:       undefined,
+    });
+    setCreateOpen(true);
+    if (students.length === 0) fetchStudents();
+  };
+
+  const handleCreate = async (values: Record<string, unknown>) => {
+    setCreateLoading(true);
+    try {
+      await api.post('/admin/student-fee-plans', {
+        student_id:  values.student_id,
+        feeplan_id:  values.feeplan_id,
+        paid_amount: values.paid_amount != null ? Number(values.paid_amount) : 0,
+        due_date:    values.due_date ? dayjs(values.due_date as string).format('YYYY-MM-DD') : null,
+        notes:       (values.notes as string)?.trim() || null,
+      });
+      message.success('Fee plan added');
+      setCreateOpen(false); createForm.resetFields();
+      setPage(1);
+      fetchRows();
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
+      const firstErr = e.response?.data?.errors ? Object.values(e.response.data.errors)[0]?.[0] : undefined;
+      message.error(firstErr || e.response?.data?.message || 'Failed to add fee plan');
+    } finally { setCreateLoading(false); }
+  };
+
   const pct = (paid: number, t: number) => t > 0 ? Math.min(100, Math.round((paid / t) * 100)) : 0;
 
   // ── Main table ───────────────────────────────────────────────────
@@ -276,7 +340,14 @@ export default function StudentFeePlans() {
 
   return (
     <div>
-      <Title level={4} style={{ marginBottom: 16 }}>Student Fee Plans</Title>
+      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <Col><Title level={4} style={{ margin: 0 }}>Student Fee Plans</Title></Col>
+        <Col>
+          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+            Add Fee Plan
+          </Button>
+        </Col>
+      </Row>
 
       <Card style={{ marginBottom: 16 }}>
         <Space wrap>
@@ -473,6 +544,67 @@ export default function StudentFeePlans() {
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={editLoading} block>Save Changes</Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* ── Add Fee Plan Modal ── */}
+      <Modal
+        title={<Space><PlusOutlined /> Add Student Fee Plan</Space>}
+        open={createOpen}
+        onCancel={() => { setCreateOpen(false); createForm.resetFields(); }}
+        footer={null}
+        width={480}
+      >
+        <Form form={createForm} layout="vertical" onFinish={handleCreate}>
+          <Form.Item name="student_id" label="Student"
+            rules={[{ required: true, message: 'Please select a student' }]}>
+            <Select
+              showSearch
+              loading={studentsLoading}
+              placeholder="Select a student"
+              optionFilterProp="label"
+              options={students.map((s) => ({ value: s.id, label: s.name }))}
+              notFoundContent={studentsLoading ? 'Loading…' : 'No students found'}
+            />
+          </Form.Item>
+
+          <Form.Item name="feeplan_id" label="Fee Plan"
+            rules={[{ required: true, message: 'Please select a fee plan' }]}>
+            <Select
+              showSearch
+              placeholder="Select a fee plan"
+              optionFilterProp="label"
+              options={allPlans.map((p) => ({
+                value: p.feeplan_id,
+                label: `${p.name} ($${Number(p.totalamount).toFixed(2)})`,
+              }))}
+            />
+          </Form.Item>
+
+          <Row gutter={12}>
+            <Col span={12}>
+              <Form.Item name="paid_amount" label="Amount Paid ($)"
+                tooltip={selectedPlanTotal != null ? `Plan total: $${selectedPlanTotal.toFixed(2)}` : undefined}>
+                <InputNumber min={0} max={selectedPlanTotal} step={0.01}
+                  style={{ width: '100%' }} prefix="$" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="due_date" label="Due Date">
+                <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item name="notes" label="Notes (optional)">
+            <TextArea rows={2} placeholder="e.g. Scholarship applied, sibling discount…" />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0 }}>
+            <Button type="primary" htmlType="submit" loading={createLoading} block icon={<PlusOutlined />}>
+              Add Fee Plan
+            </Button>
           </Form.Item>
         </Form>
       </Modal>
